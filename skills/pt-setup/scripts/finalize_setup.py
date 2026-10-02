@@ -52,36 +52,26 @@ def build(draft, owner_tz):
     owner = {"timezone": owner_tz}
     if isinstance(language, str) and language.strip():
         owner["language"] = language.strip()
-    priority = draft.get("priority") or {}
     config = {
         "owner": owner,
         "delivery": {
             "hour": draft["local_hour"],
-            "lead_minutes": PRIORITY_LEAD_MINUTES if priority.get("configured") else 0,
+            "lead_minutes": RESEARCH_LEAD_MINUTES,
         },
         "printer": {
             "configured": bool(printer.get("configured")),
             "name": printer.get("name") if printer.get("configured") else None,
         },
         "mail": {"configured": bool((draft.get("mail") or {}).get("configured"))},
-        # Priority-signal sources: next_question() only reaches close once all
-        # three are real booleans, so this is a copy, never a default.
-        "signals": {source: draft["signals"][source] is True for source in _record.SIGNAL_SOURCES},
     }
-    if isinstance(priority.get("configured"), bool):
-        config["priority"] = {"configured": bool(priority.get("configured"))}
     return config
 
 
-# The tournament, not a single advisor pass, is what the lead has to cover:
-# pt-priority requires three full generations before the paper may be
-# delivered, and only generation four and later are gated by its 150-minute
-# window. Three generations measured ~50 minutes with nothing yet rendered,
-# so 150 -- the window pt-priority already names -- is the lead that fits its
-# own budget, with the tournament's delivery.hour-30 rule holding the render
-# and print legs in the tail. Stored nominal: register_crons clamps it per
-# slot against the owner's midnight.
-PRIORITY_LEAD_MINUTES = 150
+# A deep research pass runs ~25-35 minutes before the render and print legs,
+# so the paper starts an hour ahead and post_to_chat.py holds the edition until
+# delivery.hour. Stored nominal: register_crons clamps it per slot against the
+# owner's midnight.
+RESEARCH_LEAD_MINUTES = 60
 
 
 def main(argv=None):

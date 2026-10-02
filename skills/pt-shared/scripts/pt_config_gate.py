@@ -20,7 +20,7 @@ requirement this repo does not carry):
   - Never prints PII. There is none by design: the config holds a timezone, a
     delivery hour, and whether a printer exists.
 
-The ten checks:
+The checks:
   1. owner.timezone must contain a non-whitespace char. register_crons.py
      refuses to register unless the container's TZ equals it, and SOUL.md
      routes first-run onboarding from the keys' presence -- a blank one
@@ -62,8 +62,10 @@ The ten checks:
      mail through Latch (Gmail via plow-gog first, Mail.app if that fails);
      false is an explicit no.
   9. no string value anywhere may be a leftover [UPPER_SNAKE] placeholder.
-  10. priority, when present, has a boolean `configured`. Absent priority
-     is valid and means the desk is off.
+  10. sports, when present, is `{"configured": <bool>, "followed": [{"team",
+     "league"}, ...]}`: at most MAX_FOLLOWED_TEAMS entries, each with a
+     non-blank team and league (the ESPN league slug the sports desk reads).
+     Absent means the sports desk is off. Only set_sports.py writes it.
 
 The owner's name, location, or any other personal fact is deliberately not
 among the checks, and not in the schema: location is fetched each run via
@@ -74,6 +76,7 @@ import json
 import re
 import sys
 
+MAX_FOLLOWED_TEAMS = 5
 _PLACEHOLDER_RE = re.compile(r"^\[[A-Z][A-Z0-9_]*\]$")
 _NONBLANK_RE = re.compile(r"\S")
 # The only shape the delivery hour may take: any real "HH:MM". A bare cron
@@ -93,9 +96,6 @@ class GateError(Exception):
     Collapses to "not valid JSON" in main(), exactly as the jq-era gate
     collapsed a filter-level error and a parse failure into that one line.
     """
-
-
-SIGNAL_SOURCES = ("group_chat", "email", "imessage")
 
 
 def _index(value, key):
@@ -196,25 +196,22 @@ def gate(config):
         if not isinstance(mail_configured, bool):
             failures.append("mail.configured is not a boolean")
 
-    # 10. priority, when present, is a boolean switch. Absent means the desk is
-    #     off. Its pages live at fixed paths in the owner's wiki (wiki.py).
-    priority = _index(config, "priority")
-    if priority is not None and not isinstance(_index(priority, "configured"), bool):
-        failures.append("priority.configured is not a boolean")
-
-    # 11. signals, when present, switches the priority-signal sources: an
-    #     object whose keys are group_chat / email / imessage, each a boolean.
-    #     Absent means every source is off (an install from before signals).
-    signals = _index(config, "signals")
-    if signals is not None:
-        if not isinstance(signals, dict):
-            failures.append("signals is not an object")
+    # 10. sports, when present, is the sports desk's switch and followed teams.
+    sports = _index(config, "sports")
+    if sports is not None:
+        if not isinstance(sports, dict):
+            failures.append("sports is not an object")
         else:
-            for source, switch in signals.items():
-                if source not in SIGNAL_SOURCES:
-                    failures.append(f"signals.{source} is not a signal source")
-                elif not isinstance(switch, bool):
-                    failures.append(f"signals.{source} is not a boolean")
+            if not isinstance(sports.get("configured"), bool):
+                failures.append("sports.configured is not a boolean")
+            followed = sports.get("followed")
+            if not isinstance(followed, list):
+                failures.append("sports.followed is not a list")
+            elif len(followed) > MAX_FOLLOWED_TEAMS:
+                failures.append(f"sports.followed has more than {MAX_FOLLOWED_TEAMS} teams")
+            elif not all(isinstance(i, dict) and isinstance(i.get("team"), str) and isinstance(i.get("league"), str)
+                         and _nonblank(i["team"]) and _nonblank(i["league"]) for i in followed):
+                failures.append("sports.followed needs a non-blank team and league on every entry")
 
     # 9. no leftover [UPPER_SNAKE] placeholder anywhere.
     if any(_PLACEHOLDER_RE.match(s) for s in _all_strings(config)):

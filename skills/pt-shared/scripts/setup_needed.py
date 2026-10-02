@@ -65,18 +65,11 @@ def draft_line(config_path):
     printer = draft.get("printer")
     if isinstance(printer, dict) and isinstance(printer.get("configured"), bool):
         fields.append("printer")
-    priority = draft.get("priority")
-    if isinstance(priority, dict) and isinstance(priority.get("configured"), bool):
-        fields.append("priority")
     mail = draft.get("mail")
     if isinstance(mail, dict) and isinstance(mail.get("configured"), bool):
         fields.append("mail")
     elif isinstance(draft.get("mail.configured"), bool):
         fields.append("mail")
-    signals = draft.get("signals")
-    if isinstance(signals, dict) and all(
-            isinstance(signals.get(s), bool) for s in ("group_chat", "email", "imessage")):
-        fields.append("signals")
     return "DRAFT:" + (",".join(fields) if fields else "none")
 
 

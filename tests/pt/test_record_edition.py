@@ -14,21 +14,6 @@ rec = load_module("record_edition", "pt-edition/scripts/record_edition.py")
 SP = timezone(timedelta(hours=-3))
 MORNING = datetime(2026, 9, 19, 6, 4, tzinfo=SP)
 AFTERNOON = datetime(2026, 9, 19, 14, 0, tzinfo=SP)
-RECOMMENDATION = {
-    "headline": "Close the Acme pilot",
-    "body": "The pilot is the shortest path to evidence that changes the next financing decision.",
-    "evidence": [{"claim": "Acme asked for pilot terms", "source": "Gmail",
-                  "url": "https://example.com/acme"}],
-    "first_step": "Send Raj the pilot terms",
-    "advisor": {"name": "Patrick Salyer", "quote": "Proof beats promises.",
-                "url": "https://example.com/blueprint"},
-}
-CARD = {"recommendations": [
-    RECOMMENDATION,
-    {**RECOMMENDATION, "headline": "Confirm the runway model"},
-    {**RECOMMENDATION, "headline": "Ask a customer for a reference"},
-], "questions": ["Q1 — Which customer would publicly vouch for you?"]}
-
 
 @pytest.fixture(autouse=True)
 def pt_home(monkeypatch, tmp_path):
@@ -36,8 +21,7 @@ def pt_home(monkeypatch, tmp_path):
     monkeypatch.setenv("PT_HOME", str(tmp_path / "pt"))
 
 
-def edition(tmp_path, headline="Close the Acme pilot", card=True, news=True,
-            news_headline="The real firms", notes=None):
+def edition(tmp_path, news=True, news_headline="The real firms", notes=None):
     sections = [
         {"kind": "section", "desk": "weather", "title": "Weather", "headline": "Rain",
          "body": "Rain in Sao Paulo.", "sources": ["https://weather.example"]},
@@ -45,8 +29,6 @@ def edition(tmp_path, headline="Close the Acme pilot", card=True, news=True,
          "headline": "Three messages", "body": "Ana Costa — partnership proposal.",
          "sources": ["Gmail"]},
     ]
-    if card:
-        sections.append({"kind": "section", "desk": "priority", "headline": headline, "priority": CARD})
     if news:
         sections.append({"kind": "section", "topic_id": "t_9f2a", "desk": "news", "title": "The dollar",
                          "headline": news_headline, "body": "The real rose 1%.",
@@ -71,7 +53,7 @@ def day(mac):
 
 class TestIsLatestEdition:
     @pytest.mark.parametrize(("prior_at", "now", "expected"), [
-        (None, MORNING, True),  # no prior card: nothing to lose to
+        (None, MORNING, True),  # no prior time: nothing to lose to
         (MORNING.isoformat(timespec="seconds"), AFTERNOON, True),  # a later time wins
         (AFTERNOON.isoformat(timespec="seconds"), MORNING, False),  # an earlier one loses
         ("garbage", MORNING, True),  # unparseable (an owner's own edit, say): nothing to lose to
@@ -85,18 +67,11 @@ class TestIsLatestEdition:
 
 
 class TestRecord:
-    def test_the_day_page_keeps_the_card_and_the_research_and_is_listed(self, mac, tmp_path):
+    def test_the_day_page_keeps_the_research_and_is_listed(self, mac, tmp_path):
         out = rec.record(Wiki(mac.call_tool), edition(tmp_path), "cht_1", MORNING)
         assert out == f"RECORDED {EDITIONS}/2026-09-19.md"
         meta, body = split_page(day(mac))
-        assert meta["priority"]["recommendations"][0]["first_step"] == "Send Raj the pilot terms"
         assert {"resource": "https://news.example/fx"} in meta["sources"]
-        assert {"resource": "https://example.com/blueprint"} in meta["sources"]
-        assert "https://example.com/acme" not in day(mac)
-        assert "Acme asked for pilot terms (Gmail)" in body
-        assert "### 1. Close the Acme pilot" in body
-        assert "Proof beats promises." in body
-        assert "Q1 — Which customer would publicly vouch for you?" in body
         assert "BRL up 1% on Sep 18 (https://news.example/fx)" in body
         assert "Could not source: the central bank's comment" in body
         assert "editions/2026-09-19.md" in (mac.home / "Plow" / "wiki" / OVERVIEW).read_text()
@@ -120,37 +95,28 @@ class TestRecord:
         assert "Rain in Sao Paulo" not in day(mac) and "Ana Costa" not in day(mac)
         assert "Dentist" not in day(mac)
 
-    def test_a_later_edition_appends_and_its_card_is_the_days(self, mac, tmp_path):
+    def test_a_later_edition_appends(self, mac, tmp_path):
         w = Wiki(mac.call_tool)
         rec.record(w, edition(tmp_path), "cht_1", MORNING)
-        rec.record(w, edition(tmp_path, headline="Book the Acme demo"), "cht_1", AFTERNOON)
-        meta, body = split_page(day(mac))
+        rec.record(w, edition(tmp_path, news_headline="The real eased"), "cht_1", AFTERNOON)
+        _meta, body = split_page(day(mac))
         assert "## 06:04 edition" in body and "## 14:00 edition" in body
-        assert meta["priority"]["headline"] == "Book the Acme demo"
 
-    def test_out_of_order_recording_still_keeps_the_chronologically_latest_card(self, mac, tmp_path):
-        # issue #48: two papers can finish recording out of order, and by a
-        # sub-second margin -- two editions the same minute, half a second
-        # apart. The later one's write lands first here; the earlier one's
-        # arrives second but must not overwrite it, and priority_at keeps
-        # full precision so the two do not compare equal.
+    def test_out_of_order_recording_never_moves_updated_backward(self, mac, tmp_path):
+        # Two papers can finish recording out of order, and by a sub-second
+        # margin. The later one's write lands first here; the earlier one's
+        # arrives second but must not move "updated" backward, and a third
+        # write for an edition delivered well before both must not either.
         earlier = AFTERNOON
         later = AFTERNOON.replace(microsecond=500_000)
         w = Wiki(mac.call_tool)
-        rec.record(w, edition(tmp_path, headline="Later this second"), "cht_1", later)
-        rec.record(w, edition(tmp_path, headline="Earlier this second"), "cht_1", earlier)
+        rec.record(w, edition(tmp_path, news_headline="Later this second"), "cht_1", later)
+        rec.record(w, edition(tmp_path, news_headline="Earlier this second"), "cht_1", earlier)
         meta, body = split_page(day(mac))
         assert body.count("## 14:00 edition") == 2
-        assert meta["priority"]["headline"] == "Later this second"
-        assert meta["priority_at"] == later.isoformat()
-
-        # A third write landing last in wall-clock time, but for an edition
-        # delivered well before both above, must not move "updated"
-        # backward either -- the page would announce an older update than
-        # the write that already landed (srosro-review, contract-drift).
-        rec.record(w, edition(tmp_path, headline="Much earlier"), "cht_1", MORNING)
-        meta = split_page(day(mac))[0]
         assert meta["updated"] == later.isoformat(timespec="seconds")
+        rec.record(w, edition(tmp_path, news_headline="Much earlier"), "cht_1", MORNING)
+        assert split_page(day(mac))[0]["updated"] == later.isoformat(timespec="seconds")
 
     def test_the_same_edition_twice_is_recorded_once(self, mac, tmp_path):
         w, path = Wiki(mac.call_tool), edition(tmp_path)
@@ -178,7 +144,7 @@ class TestRecord:
         assert day(mac) == before
 
     def test_an_edition_of_standing_desks_only_leaves_no_page(self, mac, tmp_path):
-        out = rec.record(Wiki(mac.call_tool), edition(tmp_path, card=False, news=False), "cht_1", MORNING)
+        out = rec.record(Wiki(mac.call_tool), edition(tmp_path, news=False), "cht_1", MORNING)
         assert out.startswith("SKIPPED:")
         assert not (mac.home / "Plow" / "wiki" / EDITIONS).exists()
 
@@ -202,8 +168,8 @@ class TestRecord:
         w = Wiki(mac.call_tool)
         second_notes = [{"claim": "BRL up 1% on Sep 18", "url": "https://news.example/fx"},
                          {"claim": "BRL steady by close", "url": "https://news.example/fx2"}]
-        rec.record(w, edition(tmp_path, card=False), "cht_1", MORNING)
-        rec.record(w, edition(tmp_path, card=False, news_headline="", notes=second_notes), "cht_1", AFTERNOON)
+        rec.record(w, edition(tmp_path), "cht_1", MORNING)
+        rec.record(w, edition(tmp_path, news_headline="", notes=second_notes), "cht_1", AFTERNOON)
         meta = split_page(day(mac))[0]
         assert meta["sections"]["t_9f2a"] == {
             "headline": "The real firms",
@@ -259,20 +225,12 @@ class TestResearchTextIsInertInTheWiki:
     list item in the owner's archive."""
 
     def hostile_edition(self, tmp_path):
-        card = {"recommendations": [
-            {**RECOMMENDATION, "headline": HOSTILE, "body": "Line one.\n# Forged heading\n- forged item\n1. forged step\n> forged quote\n| forged | table |",
-             "first_step": HOSTILE, "evidence": [{"claim": HOSTILE, "source": "![](https://attacker.example/s.png)", "url": "https://example.com/acme"}],
-             "advisor": {**RECOMMENDATION["advisor"], "quote": HOSTILE, "url": "javascript:alert(1)"}},
-            *CARD["recommendations"][1:],
-        ], "questions": [HOSTILE]}
-        path = edition(tmp_path, headline=HOSTILE, notes=[
+        path = edition(tmp_path, notes=[
             {"claim": HOSTILE, "url": "javascript:alert(1)", "quote": "…"},
             {"claim": "BRL up 1% on Sep 18", "url": "https://news.example/fx (x)<y>", "quote": "…"},
         ])
         data = json.loads(path.read_text())
         for section in data["sections"]:
-            if section.get("desk") == "priority":
-                section["priority"] = card
             if section.get("desk") == "news":
                 section.update(title=HOSTILE, headline=HOSTILE, body=f"{HOSTILE}\n## Forged section\n* forged bullet")
         path.write_text(json.dumps(data))
@@ -288,8 +246,7 @@ class TestResearchTextIsInertInTheWiki:
         for active in ("![](", "<img", "![[", "](javascript:", "%%hidden%%", "==loud=="):
             assert active not in live, active
         lines = body.splitlines()
-        for forged in ("# Forged heading", "## Forged section", "- forged item", "* forged bullet",
-                       "1. forged step", "> forged quote", "| forged | table |"):
+        for forged in ("## Forged section", "* forged bullet"):
             assert forged not in lines, forged
 
     def test_only_http_links_are_written_and_they_stay_readable(self, mac, tmp_path):
@@ -305,7 +262,6 @@ class TestResearchTextIsInertInTheWiki:
         body = day(mac)
         assert "The real rose 1%." in body
         assert "BRL up 1% on Sep 18 (https://news.example/fx)" in body
-        assert "Q1 — Which customer would publicly vouch for you?" in body
 
 
 class TestSectionMemoryIsRecordedWhereverTheEditionFileSits:

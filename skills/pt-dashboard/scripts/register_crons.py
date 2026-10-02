@@ -117,12 +117,6 @@ STALE_RUN_MINUTES = 240
 # the day up: ~40 minutes, inside the hold-until window, each round under
 # OpenClaw's 30-minute exec timeout. The on-demand copy never waits.
 HELD_LOCK_WAIT_SECONDS = 1200
-# The priority desk's floor: with less than this left before delivery, a fresh
-# three-generation tournament cannot finish (measured ~35-50 min) before the
-# render and print still to follow. A delivery hour near midnight clamps the
-# lead below it and nothing refuses that, so the prompt states the window and
-# the desk writes its own reason instead of starting a tournament it cannot end.
-MIN_TOURNAMENT_MINUTES = 50
 
 # One topic's own edition: a subscription's nightly run or a one-off.
 DELIVERY_FAILURE_NOTICE = (
@@ -161,18 +155,14 @@ def paper_prompt(hold_until=None, lead_minutes=0, focus=None):
     (or deliver_at equal to delivery.hour) and every assignment due today.
     focus="HH:MM" is the focused paper for sections booked at that hour.
     Every paper shares one workspace lock because their desk and topic
-    scratch is shared. A scheduled paper reuses today's accepted advisor
-    checkpoint when one exists, else runs the tournament.
+    scratch is shared.
 
     hold_until is the send clock (delivery.hour / an extra or focused hour).
     The job may start earlier via lead_minutes; POST must still wait. The
-    on-demand copy (--now) passes none, posts when done, and never waits
-    ~150 minutes on a tournament: it reuses the newest accepted checkpoint
-    of any date, printed with its as-of date, and runs the tournament only
-    when none has ever been accepted.
+    on-demand copy (--now) passes none and posts when done.
 
     The prompt carries only what the run cannot read from its skills: the
-    lock, the roster, the advice rule and the send clock. Delivery, print
+    lock, the roster and the send clock. Delivery, print
     and topic finalization are pt-edition step 2's, never restated here.
     """
     if focus is None:
@@ -194,19 +184,6 @@ def paper_prompt(hold_until=None, lead_minutes=0, focus=None):
         if hold_until else ""
     )
     lock = script("pt-shared", "run_lock.py")
-    advice = (
-        "reuse today's accepted checkpoint in run/desk-priority/tournament.json when "
-        f"there is one, else run the tournament -- this job starts {lead_minutes} minutes "
-        f"before {hold_until} (delivery.lead_minutes, clamped so it never starts before "
-        f"midnight); once the lock is yours, run {script('pt-shared', 'owner_time.py')} "
-        f"minutes-until {hold_until} and, under {MIN_TOURNAMENT_MINUTES} minutes, write the "
-        f"desk's own unavailable reason per pt-priority/SKILL.md instead of starting one"
-        if hold_until else
-        "reuse the newest accepted checkpoint in run/desk-priority/tournament.json whatever "
-        "its date -- an older one prints with \"as_of\" per pt-edition -- and run the "
-        "tournament only if none has ever been accepted. An older checkpoint is never a "
-        "reason to stop the paper; continue research and compile the edition with its as-of date"
-    )
     wait = f" --wait-seconds {HELD_LOCK_WAIT_SECONDS}" if hold_until else ""
     held = (
         "run the same acquire once more; if that is also 'held', another paper owns "
@@ -219,16 +196,15 @@ def paper_prompt(hold_until=None, lead_minutes=0, focus=None):
         f"--name {WORKSPACE_LOCK} --today --stale-minutes {STALE_RUN_MINUTES + lead_minutes}{wait}; "
         f"if its output is 'held', "
         f"{held}. Then "
-        f"/opt/plow/skills/pt-shared/scripts/prepare_daily_run.py --preserve-priority "
+        f"/opt/plow/skills/pt-shared/scripts/prepare_daily_run.py "
         f"(it archives prior scratch after the lock; do not inspect or reuse old run files). Then "
         f"/opt/plow/skills/pt-intake/scripts/topics.py reopen-sections "
         f"(delivered sections are yesterday's paper, not a skip). Run "
         f"/opt/plow/skills/pt-intake/scripts/topics.py check-paper {check}. "
         f"If it refuses, repeat its named roster, run {lock} "
         f"release --name {WORKSPACE_LOCK} --today, and stop before research. "
-        f"Then run pt-research: first the priority desk exactly as "
-        f"pt-research/references/desks.md says ({advice}), "
-        f"then every other standing desk it lists, in its order, then {roster}. "
+        f"Then run pt-research: every standing desk "
+        f"pt-research/references/desks.md lists, in its order, then {roster}. "
         f"Then run pt-edition for the batch, delivering with post_to_chat.py "
         f"per pt-edition/SKILL.md step 2{hold}. "
         f"Release the lock with {lock} release --name {WORKSPACE_LOCK} --today. "

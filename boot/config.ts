@@ -13,6 +13,14 @@ export type Identity = {
   mcp_url?: string | null;
 };
 
+// A group is silent and open to anyone, so its senders get no tool: every
+// OpenClaw tool group, plus the Plow tools registered beside them.
+const GROUP_DENY = [
+  "group:agents", "group:automation", "group:fs", "group:media", "group:memory", "group:messaging", "group:nodes",
+  "group:openclaw", "group:plugins", "group:runtime", "group:sessions", "group:ui", "group:web",
+  "plow_start_thread", "plow__plow_*",
+];
+
 export function renderConfig(identity: Identity, apiBase: string, llm: LlmRoute = PLOW_ROUTE) {
   const name = identity.agent?.name;
   if (typeof name !== "string" || !name.trim()) throw new Error(`Identity has no usable agent.name: ${JSON.stringify(name)}`);
@@ -55,7 +63,7 @@ export function renderConfig(identity: Identity, apiBase: string, llm: LlmRoute 
       ...(llm.provider === "openai" ? {
         models: { "openai/*": { agentRuntime: { id: "openclaw" } } }, modelPolicy: { allow: [] },
       } : {}),
-      // The advisor tournament spawns up to six critics at once; children never spawn.
+      // A research pass may spawn up to six children at once; children never spawn.
       // Delegation stays a suggestion so owner chat turns are not pushed into sub-agents.
       subagents: { maxChildrenPerAgent: 6, maxConcurrent: 6, maxSpawnDepth: 1, delegationMode: "suggest" },
     } },
@@ -76,11 +84,11 @@ export function renderConfig(identity: Identity, apiBase: string, llm: LlmRoute 
     plugins: { load: { paths: ["/opt/plow/plugin"] }, entries: { plow: { enabled: true, hooks: { allowConversationAccess: true } } } },
     channels: { plow: {
       apiBase, lineUid: identity.line.uid,
-      // Groups are listen-only and anyone may join one, so in a group every
-      // sender -- the owner too -- gets exactly one tool: recording a signal.
+      // Groups are silent and anyone may join one, so in a group every
+      // sender -- the owner too -- gets no tool at all.
       // Any groups key turns on OpenClaw's group allowlist with mentions
       // required; "*" admits every group and the agent hears every message.
-      groups: { "*": { requireMention: false, toolsBySender: { "*": { allow: ["plow_record_signal"] } } } },
+      groups: { "*": { requireMention: false, toolsBySender: { "*": { deny: GROUP_DENY } } } },
       ...(email?.type === "agent" ? { emailLineUid: email.line.uid } : {}),
     } },
     session: { dmScope: "per-account-channel-peer", groupScope: "per-group" },
@@ -100,7 +108,7 @@ export function renderConfig(identity: Identity, apiBase: string, llm: LlmRoute 
       // Code Mode catalogs every eligible tool behind exec/wait and has no
       // per-tool visibility allowlist.
       profile: "messaging", toolSearch: false, codeMode: { enabled: false }, sessions: { visibility: "tree" }, alsoAllow: [
-        "read", "write", "edit", "exec", "process", "plow_start_thread", "plow_record_signal",
+        "read", "write", "edit", "exec", "process", "plow_start_thread",
         "plow__plow_browser*", "plow__plow_get_output", "plow__plow_get_result", "plow__plow_read_file",
         "plow__plow_read_skill", "plow__plow_run_applescript", "plow__plow_run_command", "plow__plow_write_file",
       ], deny: ["ask_user", "secrets"],
@@ -120,7 +128,7 @@ const ownedPaths = [
   ["tools", ["tools"]],
   ["commands", ["commands"]],
   ["identity", ["agents", "entries", "main", "identity"]],
-  // The paper's model, bootstrap budget and advisor sub-agents, and the skills
+  // The paper's model, bootstrap budget and sub-agents, and the skills
   // it runs, ship with the image: an owner edit here would break the edition.
   ["agent-defaults", ["agents", "defaults"]],
   ["skills", ["skills"]],

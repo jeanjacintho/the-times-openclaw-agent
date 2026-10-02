@@ -23,14 +23,13 @@ which question comes after which:**
 
 One line, no interpreter prefix, no shell operators — same rule SOUL.md
 gives `setup_needed.py`. `key` is a dot-path (`local_hour`,
-`printer.configured`, `printer.name`, `priority.configured`, `mail.configured`, `news_asked`,
-`signals.group_chat`, `signals.email`, `signals.imessage`);
+`printer.configured`, `printer.name`, `mail.configured`, `news_asked`);
 `true`/`false` become real JSON booleans, anything else stays a string. A
 value with a space needs its own quoting, e.g. `printer.name="HP LaserJet 4"`.
 It prints two lines:
 
     DRAFT:<fields already recorded>
-    NEXT_QUESTION=<hour|printer|priority|mail|news|signals|close>
+    NEXT_QUESTION=<hour|printer|mail|news|close>
 
 **Send exactly the one message `NEXT_QUESTION` calls for, then stop.**
 Not that question plus the probe for the one after it. Not that question
@@ -68,18 +67,17 @@ chat.
 **Opener — send this, then stop and wait.** Copy it. Match the owner's language.
 Portuguese:
 
-> 📰 Oi! Eu sou o The Times (inspired by Mayfield), o seu jornal. A que horas você quer ele de manhã? Se não disser nada, mando às 7h.
+> 📰 Oi! Eu sou o The Times, o seu jornal. A que horas você quer ele de manhã? Se não disser nada, mando às 7h.
 
 English:
 
-> 📰 Hi — I'm The Times (inspired by Mayfield), your newspaper. What time should it land each morning? If you don't say, I'll send it at 7:00.
+> 📰 Hi — I'm The Times, your newspaper. What time should it land each morning? If you don't say, I'll send it at 7:00.
 
 **Changing one setting later** is not this skill: a different delivery hour,
 **a second (or third) daily delivery time** (`delivery.extra_hours`, a list
 of "HH:MM" strings alongside `delivery.hour`, each in the owner's own
 clock like `delivery.hour` itself — never ask the zone again), **turning the letters desk
-on or off** (`mail.configured`), **turning a signal source on or off**
-(see below), or a new printer is a
+on or off** (`mail.configured`), or a new printer is a
 one-line conversation that updates `pt/config.json` directly. Before writing
 a different `delivery.hour` (the owner's own HH:MM), run `topics.py check-paper
 --deliver-at main --main-hour <HH:MM>`; if it refuses, name its
@@ -88,18 +86,6 @@ and then re-run
 `/opt/plow/skills/pt-dashboard/scripts/register_crons.py` so the
 new schedule exists now — not an interview from the top, and never a
 hand-registered cron (see `pt-dashboard`).
-
-**Turning a signal source on or off** after setup is one bare call,
-never a hand-edited config:
-
-    /opt/plow/skills/pt-shared/scripts/set_signal_source.py group_chat on
-    /opt/plow/skills/pt-shared/scripts/set_signal_source.py email on
-    /opt/plow/skills/pt-shared/scripts/set_signal_source.py imessage on
-
-(`off` to stop). Before `email on` or `imessage on`, run the same probe as
-5b and switch nothing on if it fails. It prints
-`SIGNALS:group_chat=…,email=…,imessage=…`; confirm in one line. No cron
-changes: the daily paper reads the switches itself.
 
 ## The questions, in order
 
@@ -249,49 +235,6 @@ Latch parked or unreachable is also an answer, not a reason to skip
 
 Send only the `NEXT_QUESTION` it prints (question 3a), then stop.
 
-## NEXT_QUESTION=priority
-
-This is the advisor desk (`priority.configured`) — a Salyer-style
-adversarial tournament, not the signal-listening feature below
-(`signals.*`, question 5). The two share the English word "priority" and
-nothing else; `priority.configured=true` implies nothing about whether any
-signal source is on.
-
-Copy the question (CHAT_VOICE), in the owner's language:
-
-> ⭐ Every morning the paper can open with what Patrick Salyer would tell you after watching your last day. What are you trying to make true over the next few quarters? (or "no" to skip the advisor desk)
-
-Stop. On their next message:
-
-- **No** → `record_setup.py <config path> priority.configured=false`
-- **An answer** → first put it in their wiki. Run `chat_status.py --busy` before the
-  first Latch call and after each write; do not type that you are writing anything.
-  1. `/opt/plow/skills/pt-shared/scripts/wiki_setup.py --desk` — it makes
-     `~/Plow/wiki` ready (creating it when the Mac has none) and prints `WIKI:…`.
-  2. `plow__plow_read_file` `path=~/Plow/wiki/entities/owner/goals.md`; add
-     their answer as one `- ` line under `## Goals` unless it is already there, ending
-     with its item — the shape intake's corrections use: a Messages chat plus rowid, a
-     named mail reader's message id, or the `plow_chat:…` handle bare
-     `/opt/plow/skills/pt-shared/scripts/chat_message_id.py` prints for the owner's own
-     message; every setup answer arrives as one, so this is never optional. Set `updated:` to today. Read it again
-     immediately before the write and fold whatever
-     changed since the first read into what you write — the owner edits this page in
-     Obsidian, and their line is evidence of what they say, never something a pass
-     drops. Then `plow__plow_write_file` it back. Every other line, frontmatter
-     included, stays as it was. Never paste the page back in chat.
-  Only once the goal is on the page: `record_setup.py <config path> priority.configured=true`.
-  No re-openable handle for that message (issue #85's non-phone-backed line) → same as
-  No, no wiki write: the goal isn't supportable, so the desk stays unconfigured rather
-  than stand on nothing — the paper still prints its other desks.
-  An `error:` from step 1, or a denied or failed write → say so in one line and record
-  nothing; the question stays open.
-  Say in one line that the desk reads their Mac every morning, that they can correct it
-  any time by texting ("Raj is my cousin", "stop telling me to hire"), and that their
-  goals and the desk's Q&A are in their wiki at ~/Plow/wiki (it opens in Obsidian), where
-  The Times page shows how to add their own advisors.
-
-Then continue with the mail question in the same turn.
-
 **3a. Ask whether the paper should carry today's mail.** Copy the locked
 line. Weather and calendar always run; mail is opt-in. Send only this, then stop.
 
@@ -339,74 +282,35 @@ Then record the outcome:
 
 Send only the `NEXT_QUESTION` it prints (question 4a), then stop.
 
-**4a. Ask what they want in the paper every day.** Copy the locked line.
-Do not also add a "weather" news section unless they insist on a second,
-different weather beat. "Nothing" / "skip" is a valid install. Send only
-this, then stop.
+**4a. Ask whether they want anything on top of the weather and their agenda.**
+Copy the locked line. Do not also add a "weather" news section unless they
+insist on a second, different weather beat. "Nothing" / "skip" is a valid
+install, and the line tells them they can add more any time. Send only this,
+then stop.
 
 Portuguese:
 
-> 🗞️ O que você quer ver toda manhã? Pode ser futebol, tech, o dólar… ou “nada”, se o tempo e a agenda já bastarem.
+> 🗞️ Quer algo a mais além do tempo e da sua agenda? O placar do seu time, notícias de um assunto… ou “nada”. Dá pra pedir mais depois, é só mandar.
 
 English:
 
-> 🗞️ What do you want to see every morning? Sports, tech, the dollar… or “nothing” if weather and your day already cover it.
+> 🗞️ Want anything on top of the weather and your agenda? A team's scores, news on a topic… or “nothing”. You can add more any time, just text me.
 
 **4b. On their next message** (including "nothing" / "skip"), take each
-thing they name as a `section` topic via `pt-intake`'s writer
-(`topics.py add --kind section --depth quick`), in the order they say
-it — that order is the news desk's order. If they name more than three,
-take the first three and say the cap; the daily run researches every news
-section in one session and three is the paper's news-roster ceiling. Never invent a
-section they did not ask for. Then, regardless of whether they named
-any:
+thing they name by what it is. A **team** ("o Flamengo", "the Lakers") is the
+sports desk: `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league>`
+with the ESPN league slug you know for it (`bra.1`, `nba`, `eng.1` …); a team you
+cannot place in a league is taken as a section instead. Anything else is a
+`section` topic via `pt-intake`'s writer (`topics.py add --kind section --depth
+quick`), in the order they say it — that order is the news desk's order. If they
+name more than three sections, take the first three and say the cap; the daily
+run researches every news section in one session and three is the paper's
+news-roster ceiling. Never invent a section or a team they did not ask for. Then,
+regardless of whether they named any:
 
     record_setup.py /var/lib/plow/pt/config.json news_asked=true
 
-Send only the `NEXT_QUESTION` it prints (question 5a), then stop.
-
-**5a. Ask which signals the paper may listen to.** This is the
-`signals.group_chat`/`signals.email`/`signals.imessage` switches — email,
-iMessage and group-chat listening — a different feature from the advisor
-desk above (`priority.configured`, question 3), even though the owner-facing
-copy below says "priorities". Never infer a signal source is on from
-`priority.configured`; check `config.json` or `set_signal_source.py`'s own
-output. Copy the locked line. Every source starts off; this is how the
-owner turns any of them on. Send only this, then stop.
-
-Portuguese:
-
-> 👂 Quer que eu escute pra achar prioridades? Posso ouvir os grupos em que eu estiver (sem falar nada lá), seus e-mails e seus iMessages recebidos — filtrando spam e newsletter. Diga quais: grupos / e-mail / iMessage / nenhum.
-
-English:
-
-> 👂 Want me to listen for priorities? I can follow the group chats I'm in (without ever talking there), your incoming mail and your incoming iMessages — spam and newsletters filtered out. Say which: groups / mail / iMessage / none.
-
-**5b. On their next message**, map what they named to three switches —
-"nenhum" / "none" / "not now" is all three off. Before recording `true`:
-
-- **email** needs Google reachable. If `mail.configured` is already
-  `true`, 3b's probe proved it; otherwise run 3b's Google probe (same exact
-  argv) and record `false` if it fails.
-- **imessage** needs one probe through Latch — `chat_status.py --busy`
-  first — with **exactly** the argv the daily scan uses, so the Mac's
-  "always allow" covers the unattended runs:
-
-```json
-{ "argv": ["plow-messages", "search", "--limit", "200", "--order", "desc"], "read_paths": ["~/Library/Messages"], "goal": "Read incoming iMessages for the paper's priority signals" }
-```
-
-  A result (even zero rows) works; `blocked`, an error or an unreachable
-  Mac records `false`.
-- **group_chat** needs no probe.
-
-Then, in one call:
-
-    record_setup.py /var/lib/plow/pt/config.json signals.group_chat=<true|false> signals.email=<true|false> signals.imessage=<true|false>
-
-If a source they asked for failed its probe, say in one line, in the
-owner's language, that it can be switched on later. Send only the
-`NEXT_QUESTION` it prints — `close` — and move straight
+Send only the `NEXT_QUESTION` it prints — `close` — and move straight
 into the close step below (this one has no separate question to send;
 "close" means do the close work now).
 
@@ -459,10 +363,10 @@ Do not write `pt/config.json` until `NEXT_QUESTION` says `close`:
 Say the result in CHAT_VOICE, using the hour they named, never the
 container's zone or `TZ`. Portuguese:
 
-> 📰 Pronto — seu jornal chega todo dia às 7h. Se quiser, manda um assunto pra eu pesquisar agora.
+> 📰 Pronto — seu jornal chega todo dia às 7h. Quando quiser um time, um assunto ou outra hora, é só me mandar.
 
 English:
 
-> 📰 All set — your paper lands every morning at 7:00. Want me to look something up right now?
+> 📰 All set — your paper lands every morning at 7:00. Whenever you want a team, a topic or another time, just text me.
 
 Swap in the hour they chose. A first research job is still pt-intake's.

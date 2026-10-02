@@ -50,18 +50,6 @@ def test_same_second_uses_a_distinct_recoverable_archive(tmp_path):
     assert archived == archive_root / "run-20260920-110710-2"
 
 
-def test_noncanonical_paper_keeps_only_priority_desk(tmp_path):
-    run = tmp_path / "run"
-    for name in ("desk-priority", "desk-weather", "desk-mail"):
-        (run / name).mkdir(parents=True, exist_ok=True)
-    archived = prepare.prepare(tmp_path, NOW, preserve_priority=True)
-    assert (run / "desk-priority").exists()
-    assert not (run / "desk-weather").exists()
-    assert not (run / "desk-mail").exists()
-    assert (archived / "desk-weather").exists()
-    assert (archived / "desk-mail").exists()
-
-
 def test_cli_does_not_reveal_the_archive_to_the_research_agent():
     source = prepare.Path(prepare.__file__).read_text()
     assert 'print("READY")' in source

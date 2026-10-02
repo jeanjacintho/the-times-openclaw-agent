@@ -27,7 +27,7 @@ Every row is an agent turn in an **isolated** session, on the chat's own
 model (`PT_MODEL`: `plow/openai/gpt-6-sol` on Plow, `openai/gpt-6-sol` on the
 owner's OpenAI account), with delivery
 **none**: the scheduler never posts the run's final text anywhere. The edition
-itself is posted mid-run as the PDF plus any chat-only mail/sports companion
+itself is posted mid-run as the PDF plus any chat-only mail companion
 (`post_to_chat.py --pdf --text-file`), to the owner's DM (`PLOW_HOME_CHANNEL`, or `owner_chat.py`
 when boot did not know it yet). Every cron row carries `--tz` =
 `owner.timezone`, so the scheduler fires on the owner's own wall clock,

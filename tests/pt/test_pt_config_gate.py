@@ -200,44 +200,29 @@ class TestInvariants:
         out, _ = run_gate({**VALID, "mail": {"configured": "yes"}}, tmp_path)
         assert "mail.configured is not a boolean" in out
 
-    def test_signals_absent_is_valid(self, tmp_path):
-        # An install from before signal sources existed: every source off.
+    def test_sports_absent_is_valid(self, tmp_path):
         out, _ = run_gate(VALID, tmp_path)
         assert out == ""
 
-    def test_signals_switches_pass(self, tmp_path):
-        signals = {"group_chat": True, "email": False, "imessage": True}
-        out, _ = run_gate({**VALID, "signals": signals}, tmp_path)
+    def test_followed_teams_pass(self, tmp_path):
+        sports = {"configured": True, "followed": [{"team": "Flamengo", "league": "bra.1"}]}
+        out, _ = run_gate({**VALID, "sports": sports}, tmp_path)
         assert out == ""
 
-    def test_signals_switch_must_be_boolean(self, tmp_path):
-        out, _ = run_gate({**VALID, "signals": {"group_chat": True, "email": "on", "imessage": False}}, tmp_path)
-        assert "signals.email is not a boolean" in out
-
-    def test_signals_unknown_source_is_refused(self, tmp_path):
-        out, _ = run_gate({**VALID, "signals": {"group_chat": True, "sms": True}}, tmp_path)
-        assert "signals.sms is not a signal source" in out
-
-    def test_signals_must_be_an_object(self, tmp_path):
-        out, _ = run_gate({**VALID, "signals": ["email"]}, tmp_path)
-        assert "signals is not an object" in out
-
-    def test_priority_absent_is_valid(self, tmp_path):
-        config = dict(VALID)
-        config.pop("priority", None)
-        out, _ = run_gate(config, tmp_path)
-        assert out == ""
-
-    def test_priority_configured_must_be_boolean(self, tmp_path):
-        out, _ = run_gate(
-            {**VALID, "priority": {"configured": "true", "file": "~/Plow/prioritization.md"}},
-            tmp_path,
-        )
-        assert out == "priority.configured is not a boolean"
-
-    def test_a_configured_desk_needs_no_path(self, tmp_path):
-        out, _ = run_gate({**VALID, "priority": {"configured": True}}, tmp_path)
-        assert out == ""
+    @pytest.mark.parametrize("sports, failure", [
+        ("all", "sports is not an object"),
+        ({"configured": "yes", "followed": []}, "sports.configured is not a boolean"),
+        ({"configured": True}, "sports.followed is not a list"),
+        ({"configured": True, "followed": [{"team": "Flamengo"}]},
+         "sports.followed needs a non-blank team and league on every entry"),
+        ({"configured": True, "followed": [{"team": " ", "league": "nba"}]},
+         "sports.followed needs a non-blank team and league on every entry"),
+        ({"configured": True, "followed": [{"team": f"T{n}", "league": "nba"} for n in range(6)]},
+         "sports.followed has more than 5 teams"),
+    ])
+    def test_a_bad_sports_block_is_refused(self, tmp_path, sports, failure):
+        out, _ = run_gate({**VALID, "sports": sports}, tmp_path)
+        assert out == failure
 
     def test_placeholder_anywhere(self, tmp_path):
         out, _ = run_gate(

@@ -544,12 +544,11 @@ class TestSoul:
                   + (ROOT / "pt-shared" / "scripts" / "owner_phrases.py").read_text())
         assert "CHAT_VOICE" in soul
         assert "emoji, then a space, then one or two short spoken lines" in soul
-        for mark in ("📰", "🕖", "🖨️", "⭐", "✉️", "🗞️", "⏳"):
+        for mark in ("📰", "🕖", "🖨️", "✉️", "🗞️", "⏳"):
             assert mark in soul
         assert "> 📰 " in setup
         assert "> 🕖 " in setup
         assert "> 🖨️ " in setup
-        assert "> ⭐ " in setup
         assert "> ✉️ " in setup
         assert "> 🗞️ " in setup
         spoken = "\n".join(
@@ -560,66 +559,28 @@ class TestSoul:
         assert '"⏳ ' in status
         assert "--busy" in status
 
-    def test_setup_asks_which_signal_sources_to_listen_to(self):
-        # Question 5 switches the priority-signal sources. Every source starts
-        # off; the owner names them, and the iMessage probe uses the scan's
-        # exact argv so the Mac's "always allow" covers the unattended scan.
+    def test_setup_has_no_signal_question(self):
         soul = (AGENTS).read_text()
         setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        assert "| Asking which signals to listen to | 👂 |" in soul
-        assert "> 👂 Quer que eu escute" in setup
-        assert "> 👂 Want me to listen" in setup
-        assert "NEXT_QUESTION=<hour|printer|priority|mail|news|signals|close>" in setup
-        for field in ("signals.group_chat", "signals.email", "signals.imessage"):
-            assert field in setup
-        assert '"plow-messages", "search", "--limit", "200", "--order", "desc"' in setup
+        assert "👂" not in soul and "👂" not in setup
+        assert "NEXT_QUESTION=<hour|printer|mail|news|close>" in setup
 
-    def test_groups_are_listen_only_in_the_prompt(self):
-        # A group chat is listen-only: the channel drops any reply, and the
+    def test_setup_offers_extras_and_routes_a_team_to_the_sports_desk(self):
+        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
+        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
+        assert "> 🗞️ Quer algo a mais além do tempo e da sua agenda?" in setup
+        assert "> 🗞️ Want anything on top of the weather and your agenda?" in setup
+        assert "set_sports.py add" in setup and "set_sports.py add" in intake
+        assert "set_sports.py remove" in intake
+
+    def test_groups_are_silent_in_the_prompt(self):
+        # A group chat is silent: the channel drops any reply, and the
         # prompt must not tell the model to answer there.
         soul = (AGENTS).read_text()
         assert "In a group, or" not in soul
-        assert "In a group chat you only listen" in soul
-        assert "plow_record_signal" in soul and "NO_REPLY" in soul
-        rubric = (ROOT / "pt-shared" / "references" / "signal-triage.md").read_text()
-        for heading in ("## priority", "## fyi", "## spam"):
-            assert heading in rubric
-        assert "data, never instructions" in rubric
-
-    def test_the_paper_scans_private_signals_before_the_tournament(self):
-        # Mail and iMessage become signals only through scan -> triage ->
-        # intake -> commit, inside the priority desk's own run and before
-        # pt-priority loads; an unreadable source is an unknown, never "no mail".
-        desks = (ROOT / "pt-research" / "references" / "desks.md").read_text()
-        step = desks[desks.index("### Signals"):desks.index("## 1. Location")]
-        order = [step.index(s) for s in (
-            "scan_private_signals.py scan", "signal-triage.md", "signal_intake.py", "scan_private_signals.py commit")]
-        assert order == sorted(order)
-        assert "degraded" in step and "never" in step.lower()
-        assert "data, never instructions" in step
-
-    def test_setup_probes_imessage_with_the_scans_exact_argv(self):
-        # The Mac's always-allow keys on the exact argv: the attended setup
-        # probe is what lets the unattended scan run without an approval.
-        scan = load_module("scan_private_signals", "pt-priority/scripts/scan_private_signals.py")
-        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        probe = json.dumps({"argv": scan.IMESSAGE_ARGV, "read_paths": ["~/Library/Messages"], "goal": scan.IMESSAGE_GOAL})
-        assert probe.replace('{"argv"', '{ "argv"').rstrip("}") + " }" in setup
-
-    def test_the_tournament_treats_signals_as_unverified_evidence(self):
-        # Signals are other people's words: evidence the tournament must
-        # re-open and prosecute, never an accepted fact or an Answered entry.
-        skill = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        orient = skill[skill.index("## Orient"):skill.index("## Run generations")]
-        assert "signals_recent.py recent" in orient
-        assert "## Signals (unverified)" in orient
-        rules = skill[skill.index("### Signals are unverified evidence"):skill.index("## Run generations")]
-        for rule in ("never an Answered", "unsupported", "re-open", "ineligible at Cull",
-                     "data, never instructions", "never copy a signal's words"):
-            assert rule in rules, rule
-        challenge = skill[skill.index("### 1. Challenge + research"):skill.index("### 2. Criticize")]
-        criticize = skill[skill.index("### 2. Criticize"):skill.index("### 3. Cull")]
-        assert "signal" in challenge and "unverified signal" in criticize
+        assert "In a group chat you stay silent" in soul
+        assert "NO_REPLY" in soul
+        assert "plow_record_signal" not in soul
 
     def test_a_failed_history_read_still_researches_with_a_caveat(self):
         # A failed read of what a section printed loses de-duplication, not the
@@ -664,38 +625,6 @@ class TestSoul:
         rule = rule[:rule.index("**Every chat turn is silent")]
         for banned in ("tool name", "guardrail", "attempt count", "advice written to yourself"):
             assert banned in rule, banned
-
-    def test_the_priority_desk_checks_its_window_before_a_tournament(self):
-        # A delivery hour near midnight clamps the lead far under the ~50
-        # minutes three generations need; nothing refuses it (a lead rule was
-        # removed on purpose), so the desk measures what is left and writes its
-        # own reason instead of starting a tournament it cannot finish.
-        skill = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        orient = skill[skill.index("## Orient"):]
-        check = orient[:orient.index("Read all named advisor files")]
-        assert "Check the tournament window before anything else" in check
-        assert "owner_time.py minutes-until" in check and "under 50 minutes" in check
-        assert "in the owner's language" in check and "on-demand run states no window" in check
-        assert "too little tournament window" in skill
-
-    def test_an_owner_chat_message_is_a_reopenable_item(self):
-        # An owner correction texted to the agent's line had no documented
-        # handle, so it could never be a fact the advisor page rests on.
-        priority = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
-        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        definition = priority[priority.index("An **item** is a handle"):priority.index("is **unsupported**")]
-        assert "plow_chat:<chat uid>:<message uid>" in definition and "chat_message_id.py read" in definition
-        assert "chat_message_id.py" in intake and "HANDLE:none" in intake
-        assert "chat_message_id.py" in setup
-
-    def test_signal_sources_change_later_only_through_their_script(self):
-        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
-        for text in (setup, intake):
-            assert "set_signal_source.py" in text
-        for source in ("group_chat", "email", "imessage"):
-            assert f"set_signal_source.py {source} on" in setup
 
     def test_setup_posts_a_hang_on_while_latch_work_runs(self):
         # Typed mid-turn text is dropped on plow_chat. Slow setup work
@@ -782,15 +711,6 @@ class TestSkills:
             assert head.startswith("---"), f"{d.name}/SKILL.md has no frontmatter"
             assert f"name: {d.name}" in head, f"{d.name}/SKILL.md frontmatter name mismatch"
 
-    def test_setup_asks_about_the_priority_file(self):
-        text = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        assert "NEXT_QUESTION=priority" in text
-        assert "trying to make true" in text
-        assert not (ROOT / "pt-setup" / "assets" / "prioritization.template.md").exists()
-        section = text.split("## NEXT_QUESTION=priority", 1)[1].split("\n## ", 1)[0]
-        assert "stays as it was" in section.lower()
-        assert "leave it alone" not in section.lower()
-
     def test_no_skill_points_at_the_pre_wiki_homes(self):
         # The goals, the desk's Q&A and the owner's advisors moved into ~/Plow/wiki.
         # A skill still naming the old homes reads a file nothing writes any more.
@@ -810,101 +730,10 @@ class TestSkills:
             for old in stale:
                 assert old not in text, f"{skill.relative_to(ROOT)} still names {old}"
 
-    def test_priority_desk_is_documented_and_wired(self):
-        desks = (ROOT / "pt-research" / "references" / "desks.md").read_text()
-        assert "## Priority — first" in desks
-        assert "Complete this desk before opening the shared browser" in desks
-        assert "create the run's wiki state page" in desks
-        assert "never proof that today's desk is complete" in desks
-        assert "run/desk-calendar/events.json" in desks
-        skill = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        assert "run/desk-priority/tournament.json" in skill
-        assert "`name` = `imessage`" in skill
-        assert "**An event is its people,**" in skill
-        assert "never infer a stage" not in desks
-        edition = (ROOT / "pt-edition" / "SKILL.md").read_text()
-        assert "record_edition.py" in edition
-        assert "Skipping this desk in the canonical scheduled paper is a bug" in desks
-        # desks.md is the one statement of the priority rule (asserted in
-        # test_priority_evolution_contract); pt-research owns the rosters.
-        soul = (AGENTS).read_text()
-        assert "gap card" not in soul
-        assert "tournament" not in soul, "SOUL.md restates desks.md's priority rule"
-        research = (ROOT / "pt-research" / "SKILL.md").read_text()
-        assert "whose `deliver_at` is that hour" in research
-        assert "the founder" in skill
-        # The card's language is the owner's, read from config -- not inferred from this
-        # file. A lone `você` exemplar was the only language signal the culler had, and it
-        # wrote a Portuguese card for an English owner (#93).
-        assert "Everything this desk writes" in skill
-        # Free-form, not a flag: a binary en/pt branch silently gives a Mandarin owner
-        # English text, and pt-edition promises "Mandarin in, Mandarin out".
-        assert "a language to write in, never a flag to branch on" in skill
-        assert "not a language inferred from this file" in skill
-        assert "`you` in English, `você` in Portuguese" in skill
-        assert "owner.language` from `/var/lib/plow/pt/config.json`" in skill
-        # A config with no owner.language must not send the culler back to inferring one;
-        # pt-edition owns that fallback and this desk defers to it rather than forking it.
-        assert "is `pt-edition/SKILL.md`'s case" in skill
-        assert "Never omit the slot" in edition
-
     def test_soul_does_not_restate_delivery_argv(self):
         soul = (AGENTS).read_text()
         assert "post_to_chat.py" not in soul
 
-    def test_priority_evolution_contract(self):
-        text = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        for clause in (
-            "Mechanical loop (authoritative)",
-            "Complete at least three generations",
-            "six independent critic children in one spawn set",
-            "A critic is a prosecutor, never a reviser",
-            "exactly three grounded",
-            "A recommendation without a supporting sourced quote is ineligible",
-            "The three it returns quote three different sourced lines",
-            "/var/lib/plow/pt/run/desk-priority/tournament.candidate.json",
-            "--tournament",
-            "rewrite every reference to the owner by name or role into direct",
-            "question in the owner's language -- the literal value read during Orient",
-            "is a defect, not a style choice",
-            "`RUN_PAGE=~/Plow/wiki/projects/thetimes/runs/<run-datetime>/state.md`",
-            "sanitized `reads`",
-            "reopens decisive public read receipts",
-            "never contain raw private queries, selectors, URLs, or excerpts",
-            "item (a re-open handle, not content)",
-            "only after the renderer succeeds and `tournament.json` is atomically published",
-        ):
-            assert clause in text
-        desks = (ROOT / "pt-research" / "references" / "desks.md").read_text()
-        assert "reserved 150-minute window" in desks
-        assert "reserved 150-minute window; delivery waits" in desks
-        assert "ending earlier when the delivery cutoff requires it" not in desks
-        assert "global batch budget starts after priority" in desks
-        assert "One rule for every scheduled paper" in desks
-        assert "never waits on a tournament" in desks and "`as_of`" in desks
-        assert "an older checkpoint is never a reason to stop the" in desks
-        assert "accepted checkpoint" in desks and "reuse it" in desks
-        assert "tournament.working.json" not in text + desks
-        assert "newest active run page" not in text
-        qa = (ROOT / "pt-shared" / "assets" / "wiki" / "qa.md").read_text()
-        assert "Rank is positional" in qa
-        assert "one adjacent position" in qa
-        assert "current sourced facts" in qa
-        assert "at most 1,200 characters" not in text
-
-    def test_bundled_advisors_are_one_named_markdown_file_each(self):
-        advisor_dir = ROOT / "pt-setup" / "assets" / "advisors"
-        markdown = sorted(p.name for p in advisor_dir.glob("*.md") if p.name != "README.md")
-        assert markdown == ["patrick-salyer.md"]
-        assert not list(advisor_dir.glob("*-bank.json"))
-        priority = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        assert "every `*.md` except `README.md`" in priority
-        assert "salyer-*" not in priority and "salyer-bank.json" not in priority
-        assert "owner advisor page" not in priority
-        overview = (ROOT / "pt-shared" / "assets" / "wiki" / "overview.md").read_text()
-        advisor_readme = (advisor_dir / "README.md").read_text()
-        assert "Add your own advisor" not in overview
-        assert "Owner-added advisors" not in advisor_readme
     def test_a_news_section_reads_back_what_it_printed(self):
         # A section researched with no memory of its own past editions prints
         # the same backgrounder every morning (issue #69). The instrument is
@@ -914,23 +743,6 @@ class TestSkills:
         assert "already spent" in research
         shared = (ROOT / "pt-shared" / "SKILL.md").read_text()
         assert "--topic" in shared
-
-    def test_a_claim_whose_item_will_not_reopen_is_unsupported(self):
-        # A basis naming a file that does not exist kept its Answered standing
-        # across three generations, because "missing access is unknown, never
-        # disproved" is about the claim's truth and nothing spoke to its
-        # standing (issues #72, #73).
-        desk = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        assert "unsupported" in desk
-        assert "re-open" in desk
-        # the truth rule must survive untouched — the new rule is a different axis
-        assert "unknown, never disproved" in desk
-        # the rule needs an owner: only the live-read stages re-open what they stand on
-        assert "the only stages with live read access — re-opens" in desk
-        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
-        assert "rowid" in intake and "confirm" in intake
-        # a mail id alone is not an item -- ids from different mail readers aren't interchangeable
-        assert "named mail reader" in intake
 
     def test_calendar_desk_uses_google_then_a_locked_applescript(self):
         # Measured live 2026-09-18: two real appointments, paper said the
@@ -994,8 +806,7 @@ class TestSkills:
         # A restyle that drops a placeholder silently drops that desk from
         # the page. The renderer fills these; the template must keep them.
         template = (ROOT / "pt-edition" / "template.html").read_text()
-        for slot in ("MASTHEAD", "DATE", "LOCATION", "LEAD", "PRIORITY_BLOCK",
-                     "WEATHER_EAR", "NEWS_PAIR", "CALENDAR_RAIL"):
+        for slot in ("MASTHEAD", "DATE", "LOCATION", "WEATHER_EAR", "AGENDA", "BODY"):
             assert "{{" + slot + "}}" in template, f"template lost {{{{{slot}}}}}"
         assert "{{SUDOKU}}" not in template
 
@@ -1005,25 +816,16 @@ class TestSkills:
         # a folio line, the lead as a large headline, and news in columns.
         template = (ROOT / "pt-edition" / "template.html").read_text()
         assert "nameplate" in template
-        assert "inspired by Mayfield" in template
+        assert "your personal newspaper" in template
         assert "folio" in template
         assert "dropcap" in template
         assert "border-image" not in template  # no fake photo frames
         assert "masthead-row" in template
         assert "Every claim" not in template
-        # The priority card's heading is model-written (owner.language),
-        # not a hardcoded English/Portuguese string.
-        assert "What should I prioritize today?" not in template
-        assert "O que devo priorizar hoje?" not in template
-        assert "PRIORITY_BLOCK" in template
         assert "kicker" in template
-        assert "calendar-rail" in template
+        assert "agenda" in template and "side-rail" in template
         assert "news-pair" in template
         assert "break-inside: avoid" in template
-        # A long localized focus title must be a horizontal bar. Making it
-        # a narrow table cell stacked the English title into five lines and
-        # turned the card into a black vertical slab in the real PDF.
-        assert ".section--priority > h2 {\n    display: block;" in template
         # Never display:none an element that gets a background from
         # another rule -- WeasyPrint 62.3 paints the background anyway
         # (measured: an empty black stripe where the "hidden" h2 was).
@@ -1095,8 +897,7 @@ class TestDeployment:
         # The "messaging" profile only lets a plugin tool through when
         # tools.alsoAllow names it, and every policy layer must allow a tool.
         # Measured with OpenClaw's effective-tool inventory: without this,
-        # plow_record_signal was absent even in a group whose own policy
-        # allows exactly that tool.
+        # a plugin tool was absent even where its own policy allowed it.
         import re
 
         manifest = json.loads((REPO / "plugin" / "openclaw.plugin.json").read_text())
@@ -1181,7 +982,7 @@ class TestDeployment:
         assert "install -d -o node -g node -m 0700 /var/lib/plow/pt" in text
         assert sorted(p.parent.name for p in ROOT.glob("pt-*/SKILL.md")) == [
             "pt-dashboard", "pt-edition", "pt-intake", "pt-print",
-            "pt-priority", "pt-research", "pt-setup", "pt-shared"]
+            "pt-research", "pt-setup", "pt-shared"]
 
     def test_dockerfile_installs_weasyprint_in_the_pinned_venv(self):
         # The base image has no HTML-to-PDF engine. The probe must RENDER (a

@@ -1,7 +1,7 @@
-# The Times (inspired by Mayfield)
+# The Times
 
-Your morning paper, printed. It researches on your Mac and puts a sourced page
-in the tray — PDF in chat if you'd rather.
+Your personal newspaper. It prints your schedule, the weather, sports scores
+and news on the things you care about, on your own printer or as a PDF in chat.
 
 An [OpenClaw](https://github.com/openclaw/openclaw) agent on
 [Plow Chat](https://howto.plow.co/). You text it like a newspaper, not like a
@@ -10,37 +10,38 @@ named, in the language you write.
 
 ## What it is
 
-The product is a **compact Letter paper**. It can open with **what Patrick
-Salyer would tell you** after watching your last day, learned from your Mac,
-then weather, one calendar rail, and up to three stories you told it to cover.
-The longest story leads; the other two sit side by side. A dense edition may
-continue onto a second sheet. It goes to a printer on your Mac when one is
-there, and the same edition lands as a PDF in chat. Mail and sports stay in
-the chat edition and research context; they do not compete for printed space.
+The product is a **compact Letter paper**. The first thing on the page is
+**your agenda for the day**, then the news you asked for: the longest story
+leads and the other two sit side by side, with the scores of the teams you
+follow in a rail beside them. The weather is in the masthead. A dense edition
+may continue onto a second sheet. It goes to a printer on your Mac when one is
+there, and the same edition lands as a PDF in chat. Mail, if you turn it on,
+stays in the chat edition and never takes printed space.
 
 You do not fill a profile. The first message is the paper: what time it should
-arrive. It learns your timezone from where the Mac is.
+arrive, then one optional question — anything on top of the weather and your
+agenda? Say "nothing" and you get just those two. Ask for more whenever you
+think of it ("put Flamengo's score in my paper", "news about AI every
+morning"); the paper remembers. It learns your timezone from where the Mac is.
 
 Research runs on **your** browser, through [Latch](https://howto.plow.co/latch).
 If a page cannot be read, the paper says so — it does not invent the paragraph.
 
-What it prints goes into your wiki at `~/Plow/wiki` (Latch's Obsidian-style
-wiki): a page for each paper that carried the advisor's card or one of your own
-sections, with its sources (never your mail, calendar or weather), your goals,
-and the advisor's notes. Open it in Obsidian; edit anything.
+What it prints from your own sections goes into your wiki at `~/Plow/wiki`
+(Latch's Obsidian-style wiki): a page for each paper, with its sources (never
+your mail, calendar or weather). Open it in Obsidian; edit anything.
 
 It reports. It does not act on what it finds: no purchases, no bookings, no
 logins, no downloads.
 
 ## What goes in the paper
 
-- **Printed desks** at the front: the advisor's desk (three ranked, sourced
-  recommendations challenged by independent critics, using your mail,
-  messages, calendar and the sources you name), weather, and one calendar
-  rail. Mail and sports stay chat-only. Set `delivery.lead_minutes` for the
-  advisor's overnight window; each paper starts no earlier than midnight of its
-  delivery day and the PDF waits for the delivery hour before posting.
-- **Sections** you named ("esportes", "the dollar", a beat of your own),
+- **Standing desks.** The agenda and the weather are always there. Sports
+  scores appear for the teams you follow (up to five); mail only if you turn it
+  on, and chat-only. Each paper starts an hour ahead (`delivery.lead_minutes`,
+  never before midnight of its delivery day) and the PDF waits for the delivery
+  hour before posting.
+- **Sections** you named ("tech", "the dollar", a beat of your own),
   including a different paper at a different hour if you ask for one.
 - **One day's assignment** ("put the iPhone price in tomorrow's paper").
 - **A one-off** you want once, on a short budget.
@@ -153,29 +154,6 @@ The sign-in is a real credential for your account, kept in the state volume
 where the agent's own tools can read it. Use it on an install only you
 talk to.
 
-## Moving a paper from the Hermes edition
-
-The owner's wiki lives on their Mac and does not move. The paper's own
-choices — `pt/config.json` and `pt/topics.json` in the old `agent-home`
-volume — can be brought over instead of answering setup again:
-
-```sh
-# From the Hermes checkout, with its agent still defined:
-docker compose cp agent:/var/lib/hermes/pt ./hermes-pt
-
-# From this checkout, with this agent running:
-docker compose cp ./hermes-pt agent:/tmp/hermes-pt
-docker compose exec -u root agent chown -R node:node /tmp/hermes-pt
-docker compose exec agent /opt/plow/skills/pt-setup/scripts/import_state.py \
-  --from /tmp/hermes-pt --previous-tz America/Sao_Paulo
-```
-
-`--previous-tz` is the `TZ` the old compose ran with (`PT_TZ`, default
-`America/Sao_Paulo`). The script refuses a config that fails the setup gate,
-a topic store of the wrong shape, or an install that already has a paper
-(`--replace` overwrites on purpose), then registers the jobs. Scratch, locks
-and the old scheduler's jobs stay behind.
-
 ## Known limitations
 
 - If the model provider is unreachable at a job's time, OpenClaw records the
@@ -183,14 +161,15 @@ and the old scheduler's jobs stay behind.
   does not come by itself. Ask for it in chat ("send the paper now") once the
   provider answers.
 - An edition delivered while the Mac is unreachable is not recorded in the
-  wiki, and the next morning's advisor has no "yesterday" for it.
+  wiki, and the next morning's paper has no "yesterday" for it, so a section can
+  repeat a story.
 - One-shot jobs can be scheduled at most ten years ahead.
 
 ## Layout
 
 - `boot/`, `plugin/`, `prompt/` — the OpenClaw base: identity, gateway config,
   Plow channel (with the setup-gate hook) and the agent prompt.
-- `skills/pt-*` — setup, intake, research, priority, edition, print, dashboard
+- `skills/pt-*` — setup, intake, research, edition, print, dashboard
   and the shared scripts behind them. `skills/owners-mac`,
   `skills/google-workspace` come from the base.
 - `tests/*.test.ts` — boot and plugin tests (`node --test`); `tests/pt/` —
