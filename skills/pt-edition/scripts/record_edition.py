@@ -6,23 +6,18 @@ usage: record_edition.py <run/<id>/edition.json>
 Run once the chat leg is out (pt-edition), never before: the wiki records what
 the owner received. The day's page is projects/thetimes/editions/<date>.md;
 each edition that day appends one `## HH:MM edition` block, stamped in the
-owner's own zone (`owner_time.owner_now()`), never the container's: the
-advisor's card, then every section the owner chose (anything with a
-topic_id) with its body, the evidence its research notes hold
+owner's own zone (`owner_time.owner_now()`), never the container's: every
+section the owner chose (anything with a topic_id) with its body, the evidence its research notes hold
 (run/<topic_id>/notes.json) and what could not be sourced. Weather,
 calendar, mail and sports stay out: they are the day's reads of the owner's
 own accounts, and the wiki is every agent's recall.
 
-The page's `priority` frontmatter is the card of the day's chronologically
-latest edition (by its own `HH:MM`, not by write order -- two papers can
-record out of order, and the earlier one finishing second must not overwrite
-a later card with an older one; `priority_at` is that edition's timestamp,
-kept only to judge the next write). Its `sections` frontmatter is each topic
-id's own record (headline and every sourced claim), merged across the day's
-editions. `updated` is monotonic for the same reason: an edition recording
-out of order must not move it backward and have the page announce an older
-update than the write that already landed. history.py reads both `priority`
-and `sections` back as history. After the write, `wiki
+The page's `sections` frontmatter is each topic id's own record (headline and
+every sourced claim), merged across the day's editions. `updated` is monotonic:
+an edition recording out of order (two papers can record out of order, and the
+earlier one finishing second must not overwrite a later one) must not move it
+backward and have the page announce an older update than the write that already
+landed. history.py reads `sections` back as history. After the write, `wiki
 validate` and `wiki index`, so the paper's page lists the day.
 
 The renderer already refused a malformed edition.json before delivery, so the
@@ -109,36 +104,6 @@ def _link(url):
     return _url(url) or "unlinked source"
 
 
-def _card(card):
-    lines = ["### The advisor's desk", "", f"**{_md(card['headline'])}**", ""]
-    for rank, recommendation in enumerate(card["recommendations"], 1):
-        lines += [f"### {rank}. {_md(recommendation['headline'])}", "", _md(recommendation["body"], block=True), "",
-                  f"- First step: {_md(recommendation['first_step'])}"]
-        for evidence in recommendation["evidence"]:
-            lines.append(f"- Evidence: {_md(evidence['claim'])} ({_md(evidence['source'])})")
-        advisor = recommendation["advisor"]
-        lines += [f'- Advisor: "{_md(advisor["quote"])}" — {_md(advisor["name"])} ({_link(advisor["url"])})', ""]
-    lines += [f"- Question: {_md(question)}" for question in card.get("questions") or []]
-    return lines + [""]
-
-
-def _card_urls(card):
-    for recommendation in card["recommendations"]:
-        url = _url((recommendation.get("advisor") or {}).get("url"))
-        if url:
-            yield url
-
-
-def _archive_card(card, headline):
-    """Keep advisor citations, but never persist private evidence locators."""
-    recommendations = [
-        {**item, "evidence": [{k: v for k, v in evidence.items() if k != "url"}
-                               for evidence in item["evidence"]]}
-        for item in card["recommendations"]
-    ]
-    return {**card, "headline": headline, "recommendations": recommendations}
-
-
 def _section(section, notes):
     lines = [f"### {_md(section['title'])}", ""]
     if section.get("headline"):
@@ -184,12 +149,11 @@ def _is_latest_edition(prior_at, now):
     Two papers of the same day (the daily job and a focused pt-paper-HHMM,
     say) can finish recording out of order -- an earlier delivery landing
     its write after a later one already has. Judging by edition time rather
-    than write order keeps `priority` the latest card regardless (issue #48).
-    An unset or unparseable prior_at has nothing to lose to -- absent on a
-    page from before this field existed, and possibly mangled by the
-    owner's own edit (issue #48 notes the page is meant to be hand-edited in
-    Obsidian): a corrupt sentinel refusing every future write would be worse
-    than the mis-citation this function exists to fix.
+    than write order keeps `updated` from moving backward.
+    An unset or unparseable prior_at has nothing to lose to -- the page is
+    meant to be hand-edited in Obsidian, and a corrupt value refusing every
+    future write would be worse than the stale timestamp this function
+    exists to fix.
     """
     if not prior_at:
         return True
@@ -208,10 +172,9 @@ def record(wiki, edition_json, chat, now):
     edition = json.loads(raw)
     fill_news_desk(edition)
     sections = edition.get("sections") or []
-    printed = next((s for s in sections if isinstance(s.get("priority"), dict)), None)
     news = [s for s in sections if s.get("topic_id") and s.get("desk") == "news"]
-    if printed is None and not news:
-        return "SKIPPED: no advisor's card and no section of the owner's"
+    if not news:
+        return "SKIPPED: no section of the owner's"
     rel = f"{EDITIONS}/{edition['date']}.md"
     mark = MARK.format(hashlib.sha256(raw).hexdigest()[:12])
     ensure(wiki, chat)
@@ -237,13 +200,6 @@ def record(wiki, edition_json, chat, now):
             sections_meta = meta.setdefault("sections", {})
 
             lines, urls = [f"## {now:%H:%M} edition", mark, ""], []
-            card = _archive_card(
-                {k: v for k, v in printed["priority"].items() if k != "today"},
-                printed["headline"],
-            ) if printed else None
-            if card:
-                lines += _card(card)
-                urls += list(_card_urls(card))
             for section in news:
                 path = _notes_path(run_dir, section["topic_id"])
                 notes = json.loads(path.read_text(encoding="utf-8")) if path else {}
@@ -256,20 +212,12 @@ def record(wiki, edition_json, chat, now):
             cited = {s["resource"] for s in meta["sources"]}
             meta["sources"] += [{"resource": u} for u in dict.fromkeys(urls) if u and u not in cited]
             meta["sources"] = meta["sources"] or [{"resource": f"plow-chat:{chat}"}]
-            if card and _is_latest_edition(meta.get("priority_at"), now):
-                meta["description"] = card["recommendations"][0]["headline"]
-                meta["priority"] = card
-                # Full precision: two edits landing under the same second's
-                # truncation would otherwise compare equal and let whichever
-                # writes second win regardless of which was actually later.
-                meta["priority_at"] = now.isoformat()
-            elif not meta.get("description"):
+            if not meta.get("description"):
                 meta["description"] = news[0].get("headline") or news[0]["title"]
-            # Monotonic for the same reason priority_at is: an edition that
-            # posted earlier but records after one that posted later (and
-            # already recorded) must not move "updated" backward and have
-            # the page announce an older update than the write that already
-            # landed (srosro-review, contract-drift).
+            # An edition that posted earlier but records after one that posted
+            # later (and already recorded) must not move "updated" backward
+            # and have the page announce an older update than the write that
+            # already landed.
             if _is_latest_edition(meta.get("updated"), now):
                 meta["updated"] = now.isoformat(timespec="seconds")
             wiki.write(rel, join_page(meta, body.rstrip("\n") + "\n\n" + "\n".join(lines)))

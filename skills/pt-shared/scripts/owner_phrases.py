@@ -46,13 +46,9 @@ SOURCE = {
     "print.no_pdf": "no PDF to print at {path}",
     "turn.failed": ("I couldn't finish handling your last message. Part of the request "
                     "may have already happened, so please check before resending."),
-    "page.first_step": "FIRST STEP",
-    "page.questions": "QUESTIONS FOR YOU · TEXT “Q2: …”",
     "page.sources": "Sources:",
     "page.could_not_source": "Couldn't source:",
     "page.nothing_to_report": "Nothing to report this time.",
-    "page.advice_from": "Advice from",
-    "page.priority_band": "What to prioritize today",
 }
 
 # Curated Portuguese: the paper's first language, never left to a translation.
@@ -65,13 +61,9 @@ PORTUGUESE = {
     "print.no_pdf": "nenhum PDF para imprimir em {path}",
     "turn.failed": ("Não consegui terminar de tratar sua última mensagem. Parte do pedido "
                     "pode já ter acontecido — confira antes de mandar de novo."),
-    "page.first_step": "PRIMEIRO PASSO",
-    "page.questions": "PERGUNTAS PARA VOCÊ · RESPONDA “Q2: …”",
     "page.sources": "Fontes:",
     "page.could_not_source": "Sem fonte:",
     "page.nothing_to_report": "Nada a relatar desta vez.",
-    "page.advice_from": "Conselho de",
-    "page.priority_band": "O que priorizar hoje",
 }
 
 

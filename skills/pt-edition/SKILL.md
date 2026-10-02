@@ -89,28 +89,17 @@ HTML.** Hand-write `edition.json` under the run directory:
   not backed by a note, cut the sentence.
 - **`could_not_source` is per section, not global** — it belongs to the block
   it qualifies. Unsourced claims are named, not hidden.
-- **Every desk prints `could_not_source`, and every desk but priority
-  prints `sources`**, in the reader's words ("your calendar", never a file
-  or a path). Priority sources were the paper's own plumbing ("Sources:
-  priority desk"), so the renderer drops them there. Weather on the
+- **Every desk prints `could_not_source` and `sources`**, in the reader's
+  words ("your calendar", never a file or a path). Weather on the
   printed page is the masthead ear (a vendored Atlas icon and high/low, or
   the named miss when research failed); it has no sources line. The chat
   edition still prints weather sources and gaps.
 - **`desk` is the newspaper department.** At the front of the printed paper,
-  weather occupies the masthead ear, priority occupies the founder-focus
-  band, calendar occupies the sole right rail, and news occupies the main
-  well. The longest news body leads at full width; article order breaks ties
+  weather occupies the masthead ear, calendar occupies the sole right rail,
+  and news occupies the main well. The longest news body leads at full width; article order breaks ties
   and otherwise preserves the pair below it. Mail and sports remain in the
   chat edition but do not consume print space. Every desk keeps the same title / headline /
-  body / sources shape; the priority desk carries `sources: []`.
-- **`priority` is optional, priority-desk-only, and copied from
-  `run/desk-priority/tournament.json` without rewriting.** The printed card
-  already talks to the reader. When present it replaces the section prose on print. Shape:
-  `recommendations` is exactly three ranked objects, each with non-blank `headline`, `body`,
-  `first_step`, `evidence` (one to three `{claim, source, url?}` items), and
-  `advisor: {name, quote, url}`; `body` is at most 1,024 characters and every present `url`
-  is HTTP(S). `questions` is zero to three non-blank strings. The advisor desk owns all semantic
-  judgment; the renderer enforces only shape, length, URL form, escaping, and layout.
+  body / sources shape.
 - **`forecast` is optional, weather-only, and drawn — not written.** Exactly
   one day object: `day` (short label, e.g. "Tue"), `date` (e.g.
   "17/05"), `icon` (exactly one of `sun`, `partly-cloudy`, `cloud`,
@@ -162,20 +151,7 @@ HTML.** Hand-write `edition.json` under the run directory:
 - The daily paper always includes weather and calendar from
   `run/desk-*/notes.json`. If calendar notes list `could_not_source` and
   no events, the headline says the paper could not read the agenda (never
-  a free day — desks.md §2). **Priority is the same when `pt/config.json` has
-  `priority.configured: true`: always a `"desk": "priority"` section.** Copy
-  its `priority` object from `run/desk-priority/tournament.json` without rewriting. An
-  on-demand copy reusing an older checkpoint also sets the section's `"as_of"` to that
-  checkpoint's `date` (on that section, not the edition); the card then prints "Advice from
-  <date>". Never edit a checkpoint's `date` or render from a re-dated copy: that prints old
-  advice as today's. If that
-  complete checkpoint is missing, or the **As of** date in
-  `pt/advisor.md` is not today (on demand: not the reused checkpoint's `as_of`), write the
-  unavailable section instead: a one-line `body` saying today's card could not be built, and
-  `could_not_source` copied verbatim from `run/desk-priority/notes.json` when its `date` is
-  this edition's (that desk is kept across days; an older file's reason is not today's).
-  `render_edition.py` refuses a configured paper with no priority section, and an
-  unavailable one with no reason. Never omit the slot. Mail only when
+  a free day — desks.md §2). Mail only when
   `pt/config.json` has
   `mail.configured: true` **and** `run/desk-mail/notes.json` exists;
   otherwise omit the mail block entirely so that slot stays empty.
@@ -190,19 +166,17 @@ HTML.** Hand-write `edition.json` under the run directory:
 - **Include no more than three news articles, and never hand-split copy.**
   Pagination is the renderer's job: it keeps every included word, news
   that does not fit one Letter sheet continues on page 2+ (WeasyPrint,
-  `column-fill: auto`), each boxed desk stays whole, and the priority card
-  may continue onto page 2. It never truncates or silently drops a fourth
+  `column-fill: auto`), each boxed desk stays whole. It never truncates or silently drops a fourth
   article.
 - **A desk's notes file must be dated for today's edition.** A desk that
   fails to gather leaves the previous day's `run/desk-*/notes.json` /
   `events.json` in place. `render_edition.py` refuses an edition that carries a standing desk when any
   such file's `date` is missing or not the edition's `date`; re-run that
-  desk, or delete its stale files. `desk-priority` is kept across days and exempt;
-  `--tournament` dates its card instead, and an unavailable card needs today's `notes.json`. A news-only edition (a one-topic
+  desk, or delete its stale files. A news-only edition (a one-topic
   subscription) renders no standing desk, so leftover desk files are not
-  checked and need no action. Weather, calendar, and a configured priority
-  desk are mandatory: after deleting, compile an honest failed-gather (priority:
-  unavailable) section from the current reason, never drop them. Only mail
+  checked and need no action. Weather and calendar are mandatory: after
+  deleting, compile an honest failed-gather section from the current reason,
+  never drop them. Only mail
   and sports may be dropped as a logged miss. While the edition still carries a standing desk, the check reads
   all the files, so dropping one desk's section without deleting its files
   still refuses.
@@ -220,7 +194,7 @@ Not a topic and not built in the chat turn: `pt-intake` queues the main
 paper's own prompt as a one-shot with
 `/opt/plow/skills/pt-dashboard/scripts/register_crons.py --now`, and
 this skill delivers it from that session like any other paper (no
-`--hold-until`; the advisor card per desks.md, dated with `as_of` when older).
+`--hold-until`).
 
 ## Render and deliver
 
@@ -232,18 +206,11 @@ this skill delivers it from that session like any other paper (no
    complete command, printer or not; **copy it and change only the
    paths.** Do not add flags that are not here:
 
-       /opt/plow/skills/pt-edition/scripts/render_edition.py <edition.json> --tournament /var/lib/plow/pt/run/desk-priority/tournament.json --pdf run/<id>/edition.pdf --companion run/<id>/edition.companion.txt
+       /opt/plow/skills/pt-edition/scripts/render_edition.py <edition.json> --pdf run/<id>/edition.pdf --companion run/<id>/edition.companion.txt
 
    The printed page is this same PDF. `--chat PATH` is optional and takes
    a path when used; the chat transcript is not posted, so you normally
    leave it out entirely.
-
-   For an edition carrying `priority.recommendations`, `--tournament` is the delivery gate, not an
-   optional decoration. It refuses fewer than three completed generations, an unfinished
-   checkpoint, or a card that differs from the checkpoint. Topic-only editions and the honest
-   unavailable-card fallback have no recommendations, so this flag does not require a tournament
-   for them. Return to the priority tournament and run a missing generation; never edit its
-   generation number merely to satisfy the gate.
 
    **Continue only when the renderer exits zero and
    `run/<id>/edition.pdf` exists.** The renderer removes an old target before
@@ -314,9 +281,5 @@ this skill delivers it from that session like any other paper (no
 
 The renderer validates `edition.json` structurally before emitting anything
 (the same discipline `pt_config_gate.py` holds for the config): a bad shape
-exits non-zero with the failing field named. Page rules then refuse the
-priority card the same way: its own recommendation prose names no file or path and never labels
-the reader in the third person ("the founder", "the CEO", "the owner", "o fundador" and the
-like). Content ranking and quote selection belong to the advisor desk, not this deterministic
-gate. Other desks get the structural gate only. A run that cannot render says so
+exits non-zero with the failing field named. A run that cannot render says soA run that cannot render says so
 and waits for the next cycle — it does not ship a half page.

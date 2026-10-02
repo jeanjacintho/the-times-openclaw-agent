@@ -798,7 +798,7 @@ class TestSkills:
         # A restyle that drops a placeholder silently drops that desk from
         # the page. The renderer fills these; the template must keep them.
         template = (ROOT / "pt-edition" / "template.html").read_text()
-        for slot in ("MASTHEAD", "DATE", "LOCATION", "LEAD", "PRIORITY_BLOCK",
+        for slot in ("MASTHEAD", "DATE", "LOCATION", "LEAD",
                      "WEATHER_EAR", "NEWS_PAIR", "CALENDAR_RAIL"):
             assert "{{" + slot + "}}" in template, f"template lost {{{{{slot}}}}}"
         assert "{{SUDOKU}}" not in template
@@ -815,19 +815,10 @@ class TestSkills:
         assert "border-image" not in template  # no fake photo frames
         assert "masthead-row" in template
         assert "Every claim" not in template
-        # The priority card's heading is model-written (owner.language),
-        # not a hardcoded English/Portuguese string.
-        assert "What should I prioritize today?" not in template
-        assert "O que devo priorizar hoje?" not in template
-        assert "PRIORITY_BLOCK" in template
         assert "kicker" in template
         assert "calendar-rail" in template
         assert "news-pair" in template
         assert "break-inside: avoid" in template
-        # A long localized focus title must be a horizontal bar. Making it
-        # a narrow table cell stacked the English title into five lines and
-        # turned the card into a black vertical slab in the real PDF.
-        assert ".section--priority > h2 {\n    display: block;" in template
         # Never display:none an element that gets a background from
         # another rule -- WeasyPrint 62.3 paints the background anyway
         # (measured: an empty black stripe where the "hidden" h2 was).

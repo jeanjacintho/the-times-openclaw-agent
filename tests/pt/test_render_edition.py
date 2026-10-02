@@ -10,74 +10,23 @@ import pytest
 from conftest import ROOT, load_module
 
 render = load_module("render_edition", "pt-edition/scripts/render_edition.py")
-RECOMMENDATION = {
-    "headline": "Put retention at the center of Monday's investor conversation",
-    "body": "Lead with the segment that returns, what those users repeatedly ask the product to do, and the milestone this round buys.",
-    "evidence": [
-        {"claim": "Returning users repeat the same workflow", "source": "Weekly retention note", "url": "https://example.com/retention"},
-    ],
-    "first_step": "Draft the three-slide spine: retention, repeated use, and the runway milestone.",
-    "advisor": {"name": "Patrick Salyer", "quote": "Forget the naming (seed / A / B).", "url": "https://example.com/advisor/one"},
-}
-ADVISOR_WORDS = (
-    "Forget the naming (seed / A / B).",
-    "Raise the right amount of money to hit the milestones that unlock the next stage.",
-    "You'll know you're on the right track when you have referenceable customers.",
-)
-ADVISOR_URLS = tuple(f"https://example.com/advisor/{name}" for name in ("one", "two", "three"))
 
 
-@pytest.fixture(autouse=True)
-def synthetic_advisors(tmp_path, monkeypatch):
-    advisor_dir = tmp_path / "advisors"
-    advisor_dir.mkdir()
-    (advisor_dir / "patrick-salyer.md").write_text(
-        "---\nadvisor: Patrick Salyer\nsources:\n"
-        + "".join(f"  - {url}\n" for url in ADVISOR_URLS)
-        + "---\n## Framework\nFramework prose is not a quotation.\n## Sourced words\n"
-        + "\n".join(
-            f"- “{quote}” — [Source]({url})"
-            for quote, url in zip(ADVISOR_WORDS, ADVISOR_URLS)
-        ) + "\n",
-        encoding="utf-8",
-    )
-    monkeypatch.setattr(render, "ADVISORS", advisor_dir, raising=False)
 
 
-def recommendations(headline=RECOMMENDATION["headline"]):
-    return [
-        {**RECOMMENDATION, "headline": f"{headline} — {rank}",
-         "advisor": {**RECOMMENDATION["advisor"], "quote": ADVISOR_WORDS[rank - 1],
-                     "url": ADVISOR_URLS[rank - 1]}}
-        for rank in range(1, 4)
-    ]
-def edition_with_priority_and_weather():
-    return edition(sections=[
-        {"kind": "section", "title": "Weather", "desk": "weather", "body": "rain", "sources": []},
-        {"kind": "section", "title": "Your #1 priority today", "desk": "priority",
-         "headline": "Close the seed extension", "body": "Send the deck",
-         "priority": {"recommendations": recommendations(), "questions": []},
-         "sources": []},
-    ])
 
 
 EVENT = {"time": "10:00", "title": "Customer call: Dana", "note": "Go in with: what they use today"}
 
 
-def priority_edition(headline="Book 3 customer calls by Friday", sources=(), **fields):
-    p = {"recommendations": recommendations(headline),
-         "questions": fields.pop("questions", []), **fields}
-    return edition(sections=[{"kind": "section", "title": "P", "desk": "priority",
-                              "headline": headline, "body": "b", "priority": p,
-                              "sources": list(sources)}])
 
 
-def recommendation_edition(items=None, questions=None):
-    priority = {"recommendations": items if items is not None else recommendations(),
-                "questions": questions or []}
-    return edition(sections=[{"kind": "section", "title": "Advisor", "desk": "priority",
-                              "body": "Today's recommendations.", "priority": priority,
-                              "sources": []}])
+
+
+def edition_with_weather():
+    return edition(sections=[
+        {"kind": "section", "title": "Weather", "desk": "weather", "body": "rain", "sources": []},
+    ])
 
 
 def edition(**overrides):
@@ -103,152 +52,20 @@ def write(tmp_path, data):
     return path
 
 
-def tournament(generation=3, items=None, stage=None):
-    items = items if items is not None else recommendations()
-    return {
-        "date": "2026-09-11",
-        "generation": generation,
-        "stage": stage or f"generation_{generation}_complete_gate_passed_checkpoint_written",
-        "priority": {"recommendations": items, "questions": []},
-        "champions": [
-            {"headline": item["headline"], "rank": rank}
-            for rank, item in enumerate(items, 1)
-        ],
-    }
 
 
 class TestValidate:
-    @pytest.mark.parametrize("recommendations,failure", [
-        ([], "priority.recommendations needs exactly 3 items"),
-        ([RECOMMENDATION], "priority.recommendations needs exactly 3 items"),
-        ([RECOMMENDATION] * 4, "priority.recommendations needs exactly 3 items"),
-        (["call customers"] * 3, "priority.recommendations[0] is not an object"),
-        ([{**RECOMMENDATION, "body": "x" * 1025}] * 3, "priority.recommendations[0].body is over 1024 characters"),
-        ([{**RECOMMENDATION, "evidence": []}] * 3, "priority.recommendations[0].evidence needs 1 to 3 items"),
-        ([{**RECOMMENDATION, "evidence": [{"claim": "x", "source": "y", "url": "file:///tmp/x"}]}] * 3,
-         "priority.recommendations[0].evidence[0].url is not an http(s) URL"),
-        ([{**RECOMMENDATION, "advisor": {**RECOMMENDATION["advisor"], "quote": "Invented words."}}] * 3,
-         "priority.recommendations[0].advisor.quote is not in the named advisor file"),
-        ([{**RECOMMENDATION, "advisor": {**RECOMMENDATION["advisor"], "url": ADVISOR_URLS[1]}}] * 3,
-         "priority.recommendations[0].advisor.url does not match its sourced words entry"),
-        ([{**RECOMMENDATION, "advisor": {**RECOMMENDATION["advisor"], "quote": "Framework prose is not a quotation."}}] * 3,
-         "priority.recommendations[0].advisor.quote is not in the named advisor file"),
-        ([{**RECOMMENDATION, "advisor": {**RECOMMENDATION["advisor"], "name": "Unknown Advisor"}}] * 3,
-         "priority.recommendations[0].advisor.name has no named advisor file"),
-    ])
-    def test_recommendation_rules(self, recommendations, failure):
-        assert failure in render.validate(recommendation_edition(recommendations))
 
-    def test_ranked_recommendations_render_escaped_paper_prose(self):
-        second = {**RECOMMENDATION, "headline": "Interview <three> users", "body": "First paragraph.\n\nSecond & final.", "advisor": {**RECOMMENDATION["advisor"], "quote": ADVISOR_WORDS[1], "url": ADVISOR_URLS[1]}}
-        third = {**RECOMMENDATION, "headline": "Ship the proof", "advisor": {**RECOMMENDATION["advisor"], "quote": ADVISOR_WORDS[2], "url": ADVISOR_URLS[2]}}
-        page = recommendation_edition([RECOMMENDATION, second, third], ["Q4 — What changed?"])
-        assert render.validate(page) == ""
-        output = render.render_html(page, render.DEFAULT_MASTHEAD, "{{PRIORITY}}")
-        assert '<div class="priority-grid">' in output
-        assert output.count('<article class="priority-rec') == 3
-        assert '<p class="priority-rank">1</p><h2>Put retention at the center' in output
-        assert '<p class="priority-rank">2</p><h2>Interview &lt;three&gt; users</h2>' in output
-        assert "Second &amp; final." in output
-        assert "FIRST STEP" in output and "Patrick Salyer" in output
-        assert "Returning users repeat the same workflow" in output
-        assert 'href="https://example.com/retention"' in output
 
-    def test_closest_length_pair_sits_below_the_full_width_outlier(self):
-        items = recommendations()
-        items[0] = {**items[0], "headline": "Short outlier", "body": "Brief."}
-        items[1] = {**items[1], "headline": "Similar card two", "body": "A" * 300}
-        items[2] = {**items[2], "headline": "Similar card three", "body": "B" * 305}
 
-        output = render.priority_block({"recommendations": items, "questions": []})
 
-        feature_at = output.index('<div class="priority-feature">')
-        pair_at = output.index('<div class="priority-pair">')
-        assert feature_at < output.index("Short outlier") < pair_at
-        assert pair_at < output.index("Similar card two") < output.index("Similar card three")
-        assert output.count('class="priority-rec priority-rec--wide"') == 1
 
-    def test_recommendations_cannot_reuse_one_advisor_quote(self):
-        duplicated = [{**item, "advisor": RECOMMENDATION["advisor"]}
-                      for item in recommendations()]
-        assert "priority.recommendations reuse an advisor quote" in render.validate(
-            recommendation_edition(duplicated))
 
-    @pytest.mark.parametrize("checkpoint, failure", [
-        (tournament(generation=1), "tournament needs at least 3 completed generations"),
-        (tournament(items=list(reversed(recommendations()))),
-         "tournament champions do not match the ranked recommendations"),
-        (tournament(), None),
-    ])
-    def test_tournament_checkpoint_rules(self, checkpoint, failure):
-        result = render.validate_tournament(recommendation_edition(), checkpoint)
-        if failure is None:
-            assert result == ""
-        else:
-            assert failure in result
 
-    @pytest.mark.parametrize("date", [None, "2026-09-10"])
-    def test_tournament_date_must_match_edition(self, date):
-        checkpoint = tournament()
-        if date is None:
-            checkpoint.pop("date")
-        else:
-            checkpoint["date"] = date
-        assert "tournament date does not match edition date" in (
-            render.validate_tournament(recommendation_edition(), checkpoint)
-        )
 
-    def test_an_older_checkpoint_refusal_names_the_as_of_fix(self):
-        # Measured live 2026-09-25: the bare refusal led a model to copy the
-        # checkpoint with today's date, printing yesterday's advice as today's.
-        checkpoint = {**tournament(), "date": "2026-09-10"}
-        result = render.validate_tournament(recommendation_edition(), checkpoint)
-        assert '"as_of": "2026-09-10"' in result
-        assert "priority section" in result and "never edit" in result
 
-    def test_edition_level_as_of_is_refused_toward_the_priority_section(self):
-        page = recommendation_edition()
-        page["as_of"] = "2026-09-10"
-        assert "as_of belongs on the priority section" in render.validate(page)
 
-    def test_on_demand_copy_reuses_an_older_checkpoint_and_says_so(self):
-        page = recommendation_edition()
-        page["sections"][0]["as_of"] = "2026-09-10"
-        checkpoint = {**tournament(), "date": "2026-09-10"}
-        assert render.validate(page) == ""
-        assert render.validate_tournament(page, checkpoint) == ""
-        output = render.render_html(page, render.DEFAULT_MASTHEAD, "{{PRIORITY}}")
-        assert '<p class="priority-asof">Advice from 2026-09-10</p>' in output
-        pt = render.render_html(page, render.DEFAULT_MASTHEAD, "{{PRIORITY}}", language="Portuguese")
-        assert "Conselho de 2026-09-10" in pt
 
-    def test_same_day_reuse_needs_no_as_of_and_prints_none(self):
-        page = recommendation_edition()
-        assert render.validate_tournament(page, tournament()) == ""
-        output = render.render_html(page, render.DEFAULT_MASTHEAD, "{{PRIORITY}}")
-        assert "priority-asof" not in output
-
-    @pytest.mark.parametrize("as_of, failure", [
-        ("2026-09-12", "priority as_of is after the edition date"),
-        ("yesterday", "as_of is not a YYYY-MM-DD date on the priority desk"),
-        ("2026-13-01", "as_of is not a YYYY-MM-DD date on the priority desk"),
-    ])
-    def test_as_of_cannot_be_invented(self, as_of, failure):
-        page = recommendation_edition()
-        page["sections"][0]["as_of"] = as_of
-        checkpoint = {**tournament(), "date": as_of}
-        assert failure in (render.validate(page) + render.validate_tournament(page, checkpoint))
-
-    def test_complete_tournament_owns_the_exact_priority_card(self):
-        checkpoint = tournament()
-        checkpoint["priority"]["recommendations"][0] = {
-            **checkpoint["priority"]["recommendations"][0],
-            "body": "Different copy from the edition.",
-        }
-
-        failure = render.validate_tournament(recommendation_edition(), checkpoint)
-
-        assert "tournament priority does not match the printed recommendations" in failure
 
     def test_valid_is_silent(self):
         assert render.validate(edition()) == ""
@@ -392,29 +209,8 @@ class TestValidate:
              "messages": [{"sender": "Ana", "subject": "Hi"}]},
         ])) == ""
 
-    def test_priority_only_on_priority_desk(self):
-        edition_data = edition(sections=[{
-            "kind": "section", "title": "News", "desk": "news", "body": "n",
-            "priority": {"why": [], "first_step": "x"},
-        }])
-        assert "priority is only valid on the priority desk" in render.validate(edition_data)
 
-    def test_priority_band_speaks_the_owners_language_not_python_english(self):
-        # The band is the paper's own heading (owner_phrases.py page.priority_band),
-        # fixed across editions and in the owner's language -- never English
-        # hardcoded for a Portuguese owner, never the desk's per-run title.
-        data = recommendation_edition()
-        data["sections"][0]["title"] = "O que devo priorizar hoje?"
-        html = render.render_html(data, render.DEFAULT_MASTHEAD, "{{PRIORITY_BLOCK}}", language="Português")
-        assert "O que priorizar hoje" in html
-        assert "What to prioritize today" not in html
-        assert "priority-wrap" in html
-        assert "Put retention at the center" in html
 
-    def test_priority_title_empty_without_a_priority_desk(self):
-        html = render.render_html(edition(), render.DEFAULT_MASTHEAD,
-                                  "{{PRIORITY_BLOCK}}")
-        assert html == ""
 
     def test_news_tag_renders_as_a_kicker_above_the_headline(self):
         html = render.render_html(edition(sections=[{
@@ -456,69 +252,23 @@ class TestValidate:
         assert pair.count("Story 1") == 1 and pair.count("Story 2") == 1
 
     def test_calendar_rail_is_the_only_printed_event_owner(self):
-        priority = {"recommendations": recommendations(), "questions": []}
         html = render.render_html(edition(sections=[
-            {"kind": "section", "title": "Focus", "desk": "priority",
-             "headline": "Prepare the call", "body": "Call the customer",
-             "priority": priority, "sources": []},
             {"kind": "section", "title": "Agenda", "desk": "calendar",
              "headline": "One call", "body": "10:00 Customer call: Dana",
              "schedule": [{"time": "10:00", "title": "Customer call: Dana",
                             "icon": "call"}], "sources": ["Calendar.app"]},
         ]), render.DEFAULT_MASTHEAD,
-            "{{PRIORITY_BLOCK}}<aside class=\"calendar-rail\">{{CALENDAR_RAIL}}</aside>")
+            "<aside class=\"calendar-rail\">{{CALENDAR_RAIL}}</aside>")
         assert html.count("Customer call: Dana") == 1
         assert "<h3>TODAY</h3>" not in html
         assert html.count('class="calendar-rail"') == 1
         assert html.count("section--calendar") == 1
 
-    def test_priority_is_the_first_section_on_the_page(self):
-        html = render.render_html(edition(sections=[
-            {"kind": "section", "title": "News", "desk": "news", "body": "n", "sources": []},
-            {"kind": "section", "title": "Weather", "desk": "weather", "body": "w", "sources": []},
-            {"kind": "section", "title": "P", "desk": "priority", "body": "p",
-             "priority": {"recommendations": recommendations(), "questions": []}, "sources": []},
-        ]), render.DEFAULT_MASTHEAD, "{{PRIORITY}}{{WEATHER}}{{LEAD}}")
-        assert html.index("section--priority") < html.index("section--weather")
 
-    def test_priority_renders_exactly_once(self):
-        html = render.render_html(
-            edition_with_priority_and_weather(),
-            render.DEFAULT_MASTHEAD,
-            "{{PRIORITY_BLOCK}}{{DESKS_INLINE}}",
-        )
-        assert html.count('section--priority"') == 1
 
-    def test_priority_without_news_does_not_print_the_empty_budget_placeholder(self):
-        html = render.render_html(
-            edition_with_priority_and_weather(),
-            render.DEFAULT_MASTHEAD,
-            "{{LEAD}}{{PRIORITY_BLOCK}}",
-        )
-        assert "Nothing to report this time." not in html
-        assert "Put retention at the center" in html
-        assert html.count("<article") >= 1
-        assert "{{LEAD}}" not in html
       
 
-    def test_chat_edition_keeps_the_priority_body(self):
-        p = {"recommendations": recommendations(), "questions": []}
-        text = render.render_chat(edition(sections=[{
-            "kind": "section", "title": "P", "desk": "priority", "body": "Send the deck",
-            "priority": p, "sources": [],
-        }]), render.DEFAULT_MASTHEAD)
-        assert "Send the deck" not in text
-        for rank in range(1, 4):
-            assert f"{rank}. Put retention" in text
-        assert "• Returning users repeat the same workflow — Weekly retention note" in text
-        assert "→ Draft the three-slide spine" in text
-        assert "“Forget the naming (seed / A / B).” — Patrick Salyer" in text
 
-    def test_chat_priority_includes_ranked_questions(self):
-        text = render.render_chat(recommendation_edition(questions=["Q4 — What changed?"]),
-                                  render.DEFAULT_MASTHEAD)
-        assert "? Q4 — What changed?" in text
-        assert "Evidence" not in text and "First step" not in text and "Questions for you" not in text
 
 
 class TestMasthead:
@@ -549,7 +299,7 @@ class TestChat:
         assert "Sources: https://example.com/weather" in text
 
     @pytest.mark.parametrize("desk", render.DESKS)
-    def test_every_desk_prints_gaps_and_all_but_priority_print_sources(self, desk):
+    def test_every_desk_prints_gaps_and_sources(self, desk):
         data = edition(sections=[{
             "kind": "assignment", "topic_id": "t_3f2a", "run_on": "2026-09-11", "desk": desk,
             "title": "iPhone 15 price", "body": " ",
@@ -559,14 +309,11 @@ class TestChat:
         }])
         text = render.render_chat(data, render.DEFAULT_MASTHEAD)
         page = render.render_html(data, render.DEFAULT_MASTHEAD,
-                                  "{{LEAD}}{{PRIORITY_BLOCK}}{{WEATHER_EAR}}{{DESKS_INLINE}}")
+                                  "{{LEAD}}{{WEATHER_EAR}}{{DESKS_INLINE}}")
         assert "special for this edition" in text
-        assert ("Sources:" in text) is (desk != "priority")
+        assert "Sources:" in text
         assert "Couldn't source: the Pro model" in text
-        if desk == "priority":
-            assert "Sources:" not in page
-            assert "Couldn't source: the Pro model" in page
-        elif desk == "weather":
+        if desk == "weather":
             assert "Sources:" not in page
             assert "Couldn't source<br>" in page
             assert "the Pro model&#x27;s price" in page
@@ -964,25 +711,8 @@ class TestMain:
         assert "Weather in Sao Paulo" in html
         assert "Sudoku" not in html
 
-    def test_tournament_flag_blocks_an_early_priority_checkpoint(self, tmp_path):
-        path = write(tmp_path, recommendation_edition())
-        tournament_path = tmp_path / "tournament.json"
-        tournament_path.write_text(json.dumps(tournament(generation=1)))
-        with pytest.raises(SystemExit, match="at least 3 completed generations"):
-            render.main([str(path), "--tournament", str(tournament_path)])
-
-    def test_tournament_flag_does_not_block_an_edition_without_recommendations(self, tmp_path):
-        path = write(tmp_path, edition())
-
-        assert render.main([
-            str(path), "--tournament", str(tmp_path / "missing-tournament.json")
-        ]) == 0
-
     @pytest.mark.parametrize("data, named", [
         ({"date": "x", "sections": []}, "date is not a strict YYYY-MM-DD string"),
-        # A page rule refuses the same way: by field, and no page is written.
-        (priority_edition(headline="Call Dana then send the deck"),
-         "sections[0].headline carries more than one action"),
     ])
     def test_malformed_refused_by_name(self, tmp_path, data, named):
         path = write(tmp_path, data)
@@ -1005,20 +735,11 @@ class TestMain:
 
     @pytest.mark.parametrize("fields", [{"date": "2000-01-01"}, {}])
     def test_refuses_a_desk_file_dated_for_another_day_or_undated(self, tmp_path, fields):
-        path = _paper_with_desk_file(tmp_path, edition_with_priority_and_weather(), fields)
+        path = _paper_with_desk_file(tmp_path, edition_with_weather(), fields)
         with pytest.raises(SystemExit) as exc:
             render.main([str(path), "--config", str(tmp_path / "none.json")])
         assert "stale desk notes" in str(exc.value)
 
-    def test_a_scheduled_paper_ignores_the_retained_advisor_desk(self, tmp_path):
-        # desk-priority is kept across days so an on-demand copy can reuse it;
-        # yesterday's files there must not block today's scheduled paper.
-        path = _paper_with_desk_file(tmp_path, edition_with_priority_and_weather(),
-                                     {"date": "2026-09-11"})
-        (tmp_path / "run" / "desk-priority").mkdir()
-        (tmp_path / "run" / "desk-priority" / "card-edition.candidate.json").write_text(
-            json.dumps({"date": "2026-09-10"}))
-        render.main([str(path), "--config", str(tmp_path / "none.json")])
 
     def test_a_news_only_edition_ignores_yesterdays_desk_files(self, tmp_path):
         # A one-topic subscription renders no standing desk; a leftover file
@@ -1037,68 +758,6 @@ def _paper_with_desk_file(tmp_path, ed, fields):
     return path
 
 
-class TestPriorityDeskOwnsItsMessage:
-    WEATHER = {"kind": "section", "title": "Weather", "desk": "weather", "body": "rain", "sources": []}
-    ON = {"priority": {"configured": True}}
-    # Measured live 2026-09-22: the desk could not Orient and knew exactly why.
-    UNAVAILABLE = {"kind": "section", "title": "What to prioritize today", "desk": "priority",
-                   "body": "Today's recommendations could not be built.", "sources": [],
-                   "could_not_source": ["the wiki returned HTTP 401 on every attempt this session"]}
-
-    def _main(self, tmp_path, config, sections):
-        ed_path = write(tmp_path, edition(sections=sections))
-        cfg = tmp_path / "config.json"
-        cfg.write_text(json.dumps(config), encoding="utf-8")
-        html_path, chat_path = tmp_path / "out.html", tmp_path / "out.txt"
-        render.main([str(ed_path), "--html", str(html_path), "--chat", str(chat_path),
-                     "--config", str(cfg)])
-        return html_path.read_text(), chat_path.read_text()
-
-    # Measured live 2026-09-18: priority.configured was true, research never
-    # wrote desk-priority, edition.json shipped weather/mail/news only.
-    def test_a_configured_paper_without_the_desk_fails_loudly(self, tmp_path):
-        with pytest.raises(SystemExit) as exc:
-            self._main(tmp_path, self.ON, [self.WEATHER])
-        assert "priority is configured but edition.json has no priority section" in str(exc.value)
-
-    @pytest.mark.parametrize("config, sections", [
-        ({"priority": {"configured": False}}, [WEATHER]),
-        # A one-topic subscription edition carries no standing desk.
-        (ON, edition()["sections"]),
-    ])
-    def test_a_paper_that_owes_no_desk_renders_without_one(self, tmp_path, config, sections):
-        html, _chat = self._main(tmp_path, config, sections)
-        assert 'class="section section--priority"' not in html
-
-    @pytest.mark.parametrize("could_not", [[], [" "]])
-    def test_an_unavailable_desk_without_its_reason_is_refused(self, could_not):
-        section = {**self.UNAVAILABLE, "could_not_source": could_not}
-        assert "no priority card and no could_not_source reason" in render.validate(
-            edition(sections=[self.WEATHER, section]))
-
-    # desk-priority is kept across days; yesterday's failure is not today's reason.
-    @pytest.mark.parametrize("notes_date, refused", [("2000-01-01", True), ("2026-09-11", False)])
-    def test_an_unavailable_card_needs_todays_notes(self, tmp_path, notes_date, refused):
-        desk = tmp_path / "run" / "desk-priority"
-        desk.mkdir(parents=True)
-        (desk / "notes.json").write_text(json.dumps({"date": notes_date}), encoding="utf-8")
-        (tmp_path / "run" / "paper").mkdir()
-        ed_path = tmp_path / "run" / "paper" / "edition.json"
-        ed_path.write_text(json.dumps(edition(sections=[self.WEATHER, self.UNAVAILABLE])))
-        cfg = tmp_path / "config.json"
-        cfg.write_text(json.dumps(self.ON), encoding="utf-8")
-        if refused:
-            with pytest.raises(SystemExit, match="desk-priority/notes.json is dated"):
-                render.main([str(ed_path), "--config", str(cfg)])
-        else:
-            render.main([str(ed_path), "--config", str(cfg)])
-
-    def test_an_unavailable_desk_prints_its_own_reason(self, tmp_path):
-        html, chat = self._main(tmp_path, self.ON, [self.WEATHER, self.UNAVAILABLE])
-        reason = "the wiki returned HTTP 401 on every attempt this session"
-        assert 'class="section section--priority"' in html
-        assert f"Couldn't source: {reason}" in html
-        assert f"Couldn't source: {reason}" in chat
 
 
 class TestFillNewsDesk:
@@ -1114,8 +773,8 @@ class TestFillNewsDesk:
         assert data["sections"][2]["desk"] == "weather"
 
 
-ENGLISH_LABELS = ("FIRST STEP", "QUESTIONS FOR YOU", "Sources:", "Couldn't source", "Couldn&#x27;t source",
-                  "Nothing to report this time", "nothing to report this time", "Advice from")
+ENGLISH_LABELS = ("Sources:", "Couldn't source", "Couldn&#x27;t source",
+                  "Nothing to report this time", "nothing to report this time")
 
 
 class TestLabelsFollowTheOwnersLanguage:
@@ -1124,8 +783,7 @@ class TestLabelsFollowTheOwnersLanguage:
 
     @staticmethod
     def _every_label_edition():
-        page = recommendation_edition(questions=["Q2 — O que mudou?"])
-        page["sections"][0]["as_of"] = "2026-09-10"
+        page = edition(sections=[])
         for desk in ("weather", "calendar", "mail", "sports", "news"):
             page["sections"].append({
                 "kind": "assignment", "topic_id": f"t_{desk}", "run_on": "2026-09-11", "desk": desk,
@@ -1137,7 +795,7 @@ class TestLabelsFollowTheOwnersLanguage:
     @staticmethod
     def _render(page, language):
         html = render.render_html(page, render.DEFAULT_MASTHEAD,
-                                  "{{LEAD}}{{PRIORITY}}{{PRIORITY_BLOCK}}{{WEATHER_EAR}}{{DESKS_INLINE}}",
+                                  "{{LEAD}}{{WEATHER_EAR}}{{DESKS_INLINE}}",
                                   language=language)
         chat = render.render_chat(page, render.DEFAULT_MASTHEAD, language=language)
         empty = render.render_chat(edition(sections=[]), render.DEFAULT_MASTHEAD, language=language)
@@ -1152,7 +810,7 @@ class TestLabelsFollowTheOwnersLanguage:
         out = self._render(self._every_label_edition(), "Mandarin Chinese")
         for english in ENGLISH_LABELS:
             assert english not in out, english
-        for key in ("first_step", "questions", "sources", "could_not_source", "nothing_to_report", "advice_from"):
+        for key in ("sources", "could_not_source", "nothing_to_report"):
             assert f"〔page.{key}〕" in out, key
 
     def test_portuguese_gets_the_curated_labels(self, tmp_path, monkeypatch):
@@ -1160,33 +818,13 @@ class TestLabelsFollowTheOwnersLanguage:
         out = self._render(self._every_label_edition(), "Português")
         for english in ENGLISH_LABELS:
             assert english not in out, english
-        for label in ("PRIMEIRO PASSO", "PERGUNTAS PARA VOCÊ", "Fontes:", "Sem fonte", "Nada a relatar desta vez", "Conselho de"):
+        for label in ("Fontes:", "Sem fonte", "Nada a relatar desta vez"):
             assert label in out, label
 
     def test_no_language_reads_as_today(self, tmp_path, monkeypatch):
         monkeypatch.setenv("PT_HOME", str(tmp_path))
         out = self._render(self._every_label_edition(), "")
-        for english in ("FIRST STEP", "QUESTIONS FOR YOU", "Sources:", "Couldn't source", "Advice from", "Nothing to report this time."):
+        for english in ("Sources:", "Couldn't source", "Nothing to report this time."):
             assert english in out, english
 
 
-class TestPriorityBandIsFurniture:
-    """The priority band is masthead furniture, not model copy: two editions whose
-    desks titled themselves differently print the same heading."""
-
-    @staticmethod
-    def _heading(title, language):
-        page = recommendation_edition(questions=["Q2 — What changed?"])
-        page["sections"][0]["title"] = title
-        html = render.render_html(page, render.DEFAULT_MASTHEAD, "{{PRIORITY}}", language=language)
-        chat = render.render_chat(page, render.DEFAULT_MASTHEAD, language=language)
-        return html, chat
-
-    @pytest.mark.parametrize("language, band", [("", "What to prioritize today"), ("Português", "O que priorizar hoje")])
-    def test_the_band_heading_is_the_papers_not_the_models(self, tmp_path, monkeypatch, language, band):
-        monkeypatch.setenv("PT_HOME", str(tmp_path))
-        first = self._heading("FOUNDER FOCUS", language)
-        second = self._heading("What to prioritize today, maybe", language)
-        for html, chat in (first, second):
-            assert band in html and band in chat
-            assert "FOUNDER FOCUS" not in html + chat and "maybe" not in html + chat
