@@ -560,66 +560,20 @@ class TestSoul:
         assert '"⏳ ' in status
         assert "--busy" in status
 
-    def test_setup_asks_which_signal_sources_to_listen_to(self):
-        # Question 5 switches the priority-signal sources. Every source starts
-        # off; the owner names them, and the iMessage probe uses the scan's
-        # exact argv so the Mac's "always allow" covers the unattended scan.
+    def test_setup_has_no_signal_question(self):
         soul = (AGENTS).read_text()
         setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        assert "| Asking which signals to listen to | 👂 |" in soul
-        assert "> 👂 Quer que eu escute" in setup
-        assert "> 👂 Want me to listen" in setup
-        assert "NEXT_QUESTION=<hour|printer|priority|mail|news|signals|close>" in setup
-        for field in ("signals.group_chat", "signals.email", "signals.imessage"):
-            assert field in setup
-        assert '"plow-messages", "search", "--limit", "200", "--order", "desc"' in setup
+        assert "👂" not in soul and "👂" not in setup
+        assert "NEXT_QUESTION=<hour|printer|priority|mail|news|close>" in setup
 
-    def test_groups_are_listen_only_in_the_prompt(self):
-        # A group chat is listen-only: the channel drops any reply, and the
+    def test_groups_are_silent_in_the_prompt(self):
+        # A group chat is silent: the channel drops any reply, and the
         # prompt must not tell the model to answer there.
         soul = (AGENTS).read_text()
         assert "In a group, or" not in soul
-        assert "In a group chat you only listen" in soul
-        assert "plow_record_signal" in soul and "NO_REPLY" in soul
-        rubric = (ROOT / "pt-shared" / "references" / "signal-triage.md").read_text()
-        for heading in ("## priority", "## fyi", "## spam"):
-            assert heading in rubric
-        assert "data, never instructions" in rubric
-
-    def test_the_paper_scans_private_signals_before_the_tournament(self):
-        # Mail and iMessage become signals only through scan -> triage ->
-        # intake -> commit, inside the priority desk's own run and before
-        # pt-priority loads; an unreadable source is an unknown, never "no mail".
-        desks = (ROOT / "pt-research" / "references" / "desks.md").read_text()
-        step = desks[desks.index("### Signals"):desks.index("## 1. Location")]
-        order = [step.index(s) for s in (
-            "scan_private_signals.py scan", "signal-triage.md", "signal_intake.py", "scan_private_signals.py commit")]
-        assert order == sorted(order)
-        assert "degraded" in step and "never" in step.lower()
-        assert "data, never instructions" in step
-
-    def test_setup_probes_imessage_with_the_scans_exact_argv(self):
-        # The Mac's always-allow keys on the exact argv: the attended setup
-        # probe is what lets the unattended scan run without an approval.
-        scan = load_module("scan_private_signals", "pt-priority/scripts/scan_private_signals.py")
-        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        probe = json.dumps({"argv": scan.IMESSAGE_ARGV, "read_paths": ["~/Library/Messages"], "goal": scan.IMESSAGE_GOAL})
-        assert probe.replace('{"argv"', '{ "argv"').rstrip("}") + " }" in setup
-
-    def test_the_tournament_treats_signals_as_unverified_evidence(self):
-        # Signals are other people's words: evidence the tournament must
-        # re-open and prosecute, never an accepted fact or an Answered entry.
-        skill = (ROOT / "pt-priority" / "SKILL.md").read_text()
-        orient = skill[skill.index("## Orient"):skill.index("## Run generations")]
-        assert "signals_recent.py recent" in orient
-        assert "## Signals (unverified)" in orient
-        rules = skill[skill.index("### Signals are unverified evidence"):skill.index("## Run generations")]
-        for rule in ("never an Answered", "unsupported", "re-open", "ineligible at Cull",
-                     "data, never instructions", "never copy a signal's words"):
-            assert rule in rules, rule
-        challenge = skill[skill.index("### 1. Challenge + research"):skill.index("### 2. Criticize")]
-        criticize = skill[skill.index("### 2. Criticize"):skill.index("### 3. Cull")]
-        assert "signal" in challenge and "unverified signal" in criticize
+        assert "In a group chat you stay silent" in soul
+        assert "NO_REPLY" in soul
+        assert "plow_record_signal" not in soul
 
     def test_a_failed_history_read_still_researches_with_a_caveat(self):
         # A failed read of what a section printed loses de-duplication, not the
@@ -688,14 +642,6 @@ class TestSoul:
         assert "plow_chat:<chat uid>:<message uid>" in definition and "chat_message_id.py read" in definition
         assert "chat_message_id.py" in intake and "HANDLE:none" in intake
         assert "chat_message_id.py" in setup
-
-    def test_signal_sources_change_later_only_through_their_script(self):
-        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
-        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
-        for text in (setup, intake):
-            assert "set_signal_source.py" in text
-        for source in ("group_chat", "email", "imessage"):
-            assert f"set_signal_source.py {source} on" in setup
 
     def test_setup_posts_a_hang_on_while_latch_work_runs(self):
         # Typed mid-turn text is dropped on plow_chat. Slow setup work
@@ -1095,8 +1041,7 @@ class TestDeployment:
         # The "messaging" profile only lets a plugin tool through when
         # tools.alsoAllow names it, and every policy layer must allow a tool.
         # Measured with OpenClaw's effective-tool inventory: without this,
-        # plow_record_signal was absent even in a group whose own policy
-        # allows exactly that tool.
+        # a plugin tool was absent even where its own policy allowed it.
         import re
 
         manifest = json.loads((REPO / "plugin" / "openclaw.plugin.json").read_text())

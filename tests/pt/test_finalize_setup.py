@@ -24,7 +24,6 @@ COMPLETE = {
     "priority": {"configured": False},
     "mail": {"configured": True},
     "news_asked": True,
-    "signals": {"group_chat": False, "email": True, "imessage": False},
 }
 
 
@@ -47,7 +46,7 @@ class TestWritesAValidConfig:
         assert written["owner"]["timezone"] == "America/Sao_Paulo"
         assert written["printer"] == {"configured": True, "name": "virtual_printer_online"}
         assert written["mail"]["configured"] is True
-        assert written["signals"] == {"group_chat": False, "email": True, "imessage": False}
+        assert "signals" not in written
         assert written["delivery"]["lead_minutes"] == 0
         assert "CONFIG:written" in out
 

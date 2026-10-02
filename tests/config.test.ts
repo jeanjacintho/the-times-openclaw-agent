@@ -50,7 +50,11 @@ test("group chats get their own binding and only the signal tool, for everyone",
   // "*" admits every group and the agent must hear every message.
   assert.deepEqual(config.channels.plow.groups, { "*": {
     requireMention: false,
-    toolsBySender: { "*": { allow: ["plow_record_signal"] } },
+    toolsBySender: { "*": { deny: [
+      "group:agents", "group:automation", "group:fs", "group:media", "group:memory", "group:messaging", "group:nodes",
+      "group:openclaw", "group:plugins", "group:runtime", "group:sessions", "group:ui", "group:web",
+      "plow_start_thread", "plow__plow_*",
+    ] } },
   } });
 });
 
@@ -178,7 +182,7 @@ test("phone turns cannot block on ask_user or read secrets", () => {
 test("native messaging retains local workspace and memory file tools", () => {
   assert.deepEqual(renderConfig(identity, "http://api:8000").tools, {
     profile: "messaging", toolSearch: false, codeMode: { enabled: false }, sessions: { visibility: "tree" }, alsoAllow: [
-      "read", "write", "edit", "exec", "process", "plow_start_thread", "plow_record_signal",
+      "read", "write", "edit", "exec", "process", "plow_start_thread",
       "plow__plow_browser*", "plow__plow_get_output", "plow__plow_get_result", "plow__plow_read_file",
       "plow__plow_read_skill", "plow__plow_run_applescript", "plow__plow_run_command", "plow__plow_write_file",
     ], deny: ["ask_user", "secrets"],

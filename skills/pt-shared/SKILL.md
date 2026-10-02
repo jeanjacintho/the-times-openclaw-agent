@@ -24,7 +24,7 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   every other value is kept verbatim as a string, so a dotted or underscored
   value needs no quoting — only a value containing a space does. Prints
   `DRAFT:<fields recorded, or "none">` then
-  `NEXT_QUESTION=<hour|printer|priority|mail|news|signals|close>`; that second line — never
+  `NEXT_QUESTION=<hour|printer|priority|mail|news|close>`; that second line — never
   the draft's shape, never the chat thread — decides what `pt-setup` asks
   next. Called as `record_setup.py <config.json path> --done` it instead
   **clears** the draft (prints `DRAFT:cleared`) — the close step's last
@@ -117,22 +117,6 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   is reused); every other desk is cleared.
   It preserves topic workspaces, the live lock, and setup evidence. The wiki is delivered
   history; archived scratch is never today's completed work.
-- `scripts/signals.py` — the priority-signal contract (`source`, `from_name`,
-  `chat_or_thread_id`, `text`, `received_at`, `category`, `item`) and its
-  files under `pt/signals/`; imported, never run. This is `config.json`'s
-  `signals.*` (group chat/email/iMessage listening) — a different key from
-  the advisor desk's `priority.configured`; one being true implies nothing
-  about the other.
-- `scripts/signal_intake.py` — the ONLY way a signal is written. Called bare
-  with one record as JSON on stdin; prints one JSON line. Only
-  `category: priority` from a source switched on in `config.json` `signals`
-  becomes a file; spam, fyi, duplicates and empty text are refused with a
-  `reason`. Never write `pt/signals/` with the write or edit tools.
-- `scripts/set_signal_source.py <group_chat|email|imessage> <on|off>` — the
-  ONLY way a finished config's signal switches change; gate-checked, atomic,
-  prints `SIGNALS:group_chat=…,email=…,imessage=…`. Called bare. Never
-  assert a source is on/off without this script's own stdout or a fresh
-  read of `config.json` — `priority.configured` is not evidence either way.
 - `scripts/chat_message_id.py` — the item for the owner's own Plow chat message:
   bare, `HANDLE:plow_chat:<chat>:<message>` for their latest message or
   `HANDLE:none` (fails closed, never a guess); `read <handle>` re-opens it as
@@ -143,8 +127,6 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   language the translation the model records once (stdin JSON, every key, every
   `{placeholder}` kept). `status` prints `PHRASES:ready|missing`. The library
   call `phrase(key, language, **fields)` is what scripts use.
-- `references/signal-triage.md` — the one priority / fyi / spam rubric for group
-  chats, mail and iMessage; the channel puts it in front of every group turn.
 - `references/config.example.json` — the config contract `pt_config_gate.py`
   enforces (including the optional `delivery.lead_minutes`, default 0, and
   optional `mail.configured`, default off)
