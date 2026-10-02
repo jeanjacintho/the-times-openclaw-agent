@@ -200,6 +200,30 @@ class TestInvariants:
         out, _ = run_gate({**VALID, "mail": {"configured": "yes"}}, tmp_path)
         assert "mail.configured is not a boolean" in out
 
+    def test_sports_absent_is_valid(self, tmp_path):
+        out, _ = run_gate(VALID, tmp_path)
+        assert out == ""
+
+    def test_followed_teams_pass(self, tmp_path):
+        sports = {"configured": True, "followed": [{"team": "Flamengo", "league": "bra.1"}]}
+        out, _ = run_gate({**VALID, "sports": sports}, tmp_path)
+        assert out == ""
+
+    @pytest.mark.parametrize("sports, failure", [
+        ("all", "sports is not an object"),
+        ({"configured": "yes", "followed": []}, "sports.configured is not a boolean"),
+        ({"configured": True}, "sports.followed is not a list"),
+        ({"configured": True, "followed": [{"team": "Flamengo"}]},
+         "sports.followed needs a non-blank team and league on every entry"),
+        ({"configured": True, "followed": [{"team": " ", "league": "nba"}]},
+         "sports.followed needs a non-blank team and league on every entry"),
+        ({"configured": True, "followed": [{"team": f"T{n}", "league": "nba"} for n in range(6)]},
+         "sports.followed has more than 5 teams"),
+    ])
+    def test_a_bad_sports_block_is_refused(self, tmp_path, sports, failure):
+        out, _ = run_gate({**VALID, "sports": sports}, tmp_path)
+        assert out == failure
+
     def test_placeholder_anywhere(self, tmp_path):
         out, _ = run_gate(
             {**VALID, "owner": {"timezone": "[OWNER_TZ]"}}, tmp_path

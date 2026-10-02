@@ -203,8 +203,8 @@ Notes at `run/desk-mail/notes.json`. Never invent an inbox.
 
 Read `pt/config.json`. If `sports.configured` is not exactly `true`, skip
 this desk entirely — no notes file, no edition block. When it is true,
-`sports.followed` is a list of `{ "team", "league" }` the owner set up in
-pt-intake (e.g. `{"team": "Flamengo", "league": "brazil.1"}` or
+`sports.followed` is a list of `{ "team", "league" }` the owner set with
+`set_sports.py` (e.g. `{"team": "Flamengo", "league": "bra.1"}` or
 `{"team": "Lakers", "league": "nba"}`) — research only those teams, never
 a generic league digest nobody asked for.
 

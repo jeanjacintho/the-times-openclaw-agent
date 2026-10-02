@@ -565,6 +565,14 @@ class TestSoul:
         assert "👂" not in soul and "👂" not in setup
         assert "NEXT_QUESTION=<hour|printer|mail|news|close>" in setup
 
+    def test_setup_offers_extras_and_routes_a_team_to_the_sports_desk(self):
+        setup = (ROOT / "pt-setup" / "SKILL.md").read_text()
+        intake = (ROOT / "pt-intake" / "SKILL.md").read_text()
+        assert "> 🗞️ Quer algo a mais além do tempo e da sua agenda?" in setup
+        assert "> 🗞️ Want anything on top of the weather and your agenda?" in setup
+        assert "set_sports.py add" in setup and "set_sports.py add" in intake
+        assert "set_sports.py remove" in intake
+
     def test_groups_are_silent_in_the_prompt(self):
         # A group chat is silent: the channel drops any reply, and the
         # prompt must not tell the model to answer there.

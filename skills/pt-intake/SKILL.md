@@ -85,6 +85,13 @@ These are ordinary turns, not classifications. Do them and end:
   (`plow-gog gmail search`) first, Mail.app only if that fails** (same
   argv order as pt-setup). Validate with the gate, then confirm in one line.
   The daily job already exists; no extra cron.
+- **"put Flamengo's score in my paper" / "follow the Lakers" / "stop the Lakers"** — the
+  sports desk, not a topic. `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>"
+  <league>` (the ESPN league slug: `bra.1` Brasileirão, `nba`, `nfl`, `eng.1`, `esp.1` …;
+  desks.md §4 confirms it at run time) or `set_sports.py remove "<team>"`; `set_sports.py
+  list` answers "which teams do you follow". It refuses a sixth team: say the cap in one line.
+  Confirm in one line. The daily job already exists; no extra cron. A sport or league with
+  no team ("football news") is a news section, below.
 
 ## New topic — classify, then write
 

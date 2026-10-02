@@ -282,27 +282,31 @@ Then record the outcome:
 
 Send only the `NEXT_QUESTION` it prints (question 4a), then stop.
 
-**4a. Ask what they want in the paper every day.** Copy the locked line.
-Do not also add a "weather" news section unless they insist on a second,
-different weather beat. "Nothing" / "skip" is a valid install. Send only
-this, then stop.
+**4a. Ask whether they want anything on top of the weather and their agenda.**
+Copy the locked line. Do not also add a "weather" news section unless they
+insist on a second, different weather beat. "Nothing" / "skip" is a valid
+install, and the line tells them they can add more any time. Send only this,
+then stop.
 
 Portuguese:
 
-> 🗞️ O que você quer ver toda manhã? Pode ser futebol, tech, o dólar… ou “nada”, se o tempo e a agenda já bastarem.
+> 🗞️ Quer algo a mais além do tempo e da sua agenda? O placar do seu time, notícias de um assunto… ou “nada”. Dá pra pedir mais depois, é só mandar.
 
 English:
 
-> 🗞️ What do you want to see every morning? Sports, tech, the dollar… or “nothing” if weather and your day already cover it.
+> 🗞️ Want anything on top of the weather and your agenda? A team's scores, news on a topic… or “nothing”. You can add more any time, just text me.
 
 **4b. On their next message** (including "nothing" / "skip"), take each
-thing they name as a `section` topic via `pt-intake`'s writer
-(`topics.py add --kind section --depth quick`), in the order they say
-it — that order is the news desk's order. If they name more than three,
-take the first three and say the cap; the daily run researches every news
-section in one session and three is the paper's news-roster ceiling. Never invent a
-section they did not ask for. Then, regardless of whether they named
-any:
+thing they name by what it is. A **team** ("o Flamengo", "the Lakers") is the
+sports desk: `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league>`
+with the ESPN league slug you know for it (`bra.1`, `nba`, `eng.1` …); a team you
+cannot place in a league is taken as a section instead. Anything else is a
+`section` topic via `pt-intake`'s writer (`topics.py add --kind section --depth
+quick`), in the order they say it — that order is the news desk's order. If they
+name more than three sections, take the first three and say the cap; the daily
+run researches every news section in one session and three is the paper's
+news-roster ceiling. Never invent a section or a team they did not ask for. Then,
+regardless of whether they named any:
 
     record_setup.py /var/lib/plow/pt/config.json news_asked=true
 
@@ -359,10 +363,10 @@ Do not write `pt/config.json` until `NEXT_QUESTION` says `close`:
 Say the result in CHAT_VOICE, using the hour they named, never the
 container's zone or `TZ`. Portuguese:
 
-> 📰 Pronto — seu jornal chega todo dia às 7h. Se quiser, manda um assunto pra eu pesquisar agora.
+> 📰 Pronto — seu jornal chega todo dia às 7h. Quando quiser um time, um assunto ou outra hora, é só me mandar.
 
 English:
 
-> 📰 All set — your paper lands every morning at 7:00. Want me to look something up right now?
+> 📰 All set — your paper lands every morning at 7:00. Whenever you want a team, a topic or another time, just text me.
 
 Swap in the hour they chose. A first research job is still pt-intake's.

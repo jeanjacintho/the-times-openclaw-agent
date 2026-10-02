@@ -109,6 +109,11 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   archives prior dated and desk scratch beside `run/` and prints `READY`.
   It preserves topic workspaces, the live lock, and setup evidence. The wiki is delivered
   history; archived scratch is never today's completed work.
+- `scripts/set_sports.py add <team> <league> | remove <team> | list` — the ONLY way the
+  teams the sports desk follows change; gate-checked, atomic, at most five teams, prints
+  `SPORTS:<team> (<league>), …` or `SPORTS:none`. Adding the first team turns
+  `sports.configured` on, removing the last turns it off. `league` is the ESPN slug the
+  desk reads (`bra.1`, `nba`, `eng.1`). Called bare; never hand-edit the `sports` block.
 - `scripts/owner_phrases.py template | record | status` — the paper's fixed
   lines (setup wait lines, print-miss line, failed-turn notice, page labels) in
   the owner's language: curated English and Portuguese, and for any other
