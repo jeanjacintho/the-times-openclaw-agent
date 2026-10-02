@@ -17,12 +17,13 @@ the product prose and this file does not repeat it. Flag drift between that
 prose and the code, in either direction.
 
 **Operating point:** pre-PMF, a handful of installs, each one owner's paper
-running in Docker against their own Plow line. One owner, one container, one
-paper a day: there is no shared state, no concurrency between owners and no
-scale to design for. So the dominant lens is **YAGNI**. Decline remedies that
-add retries, fallbacks, locks, caches, multi-tenant or concurrency guards, or
-abstractions for a second caller that does not exist; prefer the deletion or
-the inline version. A finding must name what breaks for one owner's paper
+running in Docker against their own Plow line. One owner, one container: there is no shared state between owners, no
+cross-owner concurrency and no scale to design for. So the dominant lens is
+**YAGNI**. Decline remedies that add retries, fallbacks, caches, multi-tenant
+or cross-owner guards, or abstractions for a second caller that does not
+exist; prefer the deletion or the inline version. One owner's own runs can
+overlap (two papers, a manual run during a scheduled one), so the locks that
+guard that are real; keep them. A finding must name what breaks for one owner
 today. A reliability guess about load this repo will not see is at most
 `[low]`.
 
