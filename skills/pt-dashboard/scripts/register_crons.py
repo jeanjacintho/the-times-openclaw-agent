@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Register the Founder Times' crons, idempotently, from the topic store.
+"""Register the Times' crons, idempotently, from the topic store.
 
 Why this exists at all. The scheduler keeps its jobs in the gateway's state
 volume; a fresh volume has none, and nothing else replays them. Keeping the

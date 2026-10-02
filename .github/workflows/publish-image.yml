@@ -11,7 +11,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/the-founder-times
+  IMAGE: ghcr.io/${{ github.repository_owner }}/the-times
 
 jobs:
   publish:
@@ -57,5 +57,5 @@ jobs:
             echo
             echo "Promote (Plow admin):"
             echo
-            echo "\`plow-agents image promote thefoundertimes ${IMAGE}@${{ steps.build.outputs.digest }}\`"
+            echo "\`plow-agents image promote thetimes ${IMAGE}@${{ steps.build.outputs.digest }}\`"
           } >> "$GITHUB_STEP_SUMMARY"

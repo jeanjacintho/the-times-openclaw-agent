@@ -128,8 +128,8 @@ RUN case "${TARGETARCH:-amd64}" in \
 RUN cd /opt/plow && npm ci --omit=dev --omit=peer --omit=optional --ignore-scripts && node /opt/plow/build.ts && chmod +x /opt/plow/probe
 ENV OPENCLAW_STATE_DIR=/var/lib/plow OPENCLAW_CONFIG_PATH=/var/lib/plow/openclaw.json OPENCLAW_INCLUDE_ROOTS=/etc/plow/openclaw OPENCLAW_NO_RESPAWN=1 NODE_DISABLE_COMPILE_CACHE=1
 # Agent Index listing. Compose (and a host that injects env) can override without rebuild.
-ENV AGENT_ID=thefoundertimes \
-    AGENT_NAME="The Founder Times" \
+ENV AGENT_ID=thetimes \
+    AGENT_NAME="The Times" \
     AGENT_BLURB="Your day's priorities, printed. Inspired by Mayfield's Patrick Salyer, it learns what you're working on from your Mac and prints what to focus on today, with sources, or sends a PDF to chat." \
     AGENT_RUNTIME="OpenClaw 2.0"
 # The inherited healthcheck loads config and can race the boot state lock.

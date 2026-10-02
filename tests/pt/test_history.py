@@ -19,7 +19,7 @@ def day_page(mac, day, card=None, sections=None):
     meta = {"type": "Edition", "date": day,
             **({"priority": card} if card else {}),
             **({"sections": sections} if sections else {})}
-    path.write_text(join_page(meta, f"# The Founder Times, {day}\n"))
+    path.write_text(join_page(meta, f"# The Times, {day}\n"))
 
 
 class TestRecent:

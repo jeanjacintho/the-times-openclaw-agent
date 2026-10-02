@@ -153,7 +153,7 @@ def ship(pdf_path, printer, date, call_tool):
             "argv": ["lp", "-d", printer, abs_pdf],
             "network": True,
             "read_paths": [abs_pdf],
-            "goal": "Print today's Founder Times edition",
+            "goal": "Print today's Times edition",
         },
     )
     lp = finish_command(call_tool, lp, "lp")  # a running lp can still fail with BFD
@@ -164,7 +164,7 @@ def ship(pdf_path, printer, date, call_tool):
             {
                 "app": "System Events",
                 "script": f"do shell script {json.dumps(cmd)}",
-                "goal": "Print today's Founder Times edition (sandboxed lp failed)",
+                "goal": "Print today's Times edition (sandboxed lp failed)",
             },
         )
     require_exit_zero(call_tool, lp, "lp")

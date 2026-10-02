@@ -21,7 +21,7 @@ class TestEnsure:
     def test_a_mac_without_a_wiki_gets_one_the_paper_can_write(self, mac):
         ws.ensure(Wiki(mac.call_tool), "cht_1")
         toml = (wiki_dir(mac) / "wiki.toml").read_text()
-        assert f'[roots."{ROOT}"]\nwriter = "thefoundertimes"' in toml
+        assert f'[roots."{ROOT}"]\nwriter = "thetimes"' in toml
         assert (wiki_dir(mac) / SCHEMA).exists() and (wiki_dir(mac) / OVERVIEW).exists()
         assert mac.wiki("validate")["exit_code"] == 0
 
@@ -46,7 +46,7 @@ class TestEnsure:
     def test_the_root_already_declared_in_another_spelling_is_left_alone(self, mac):
         mac.wiki("init", "~/Plow/wiki")
         toml = wiki_dir(mac) / "wiki.toml"
-        toml.write_text(toml.read_text() + f"\n[roots.'{ROOT}']\nwriter = \"thefoundertimes\"\n")
+        toml.write_text(toml.read_text() + f"\n[roots.'{ROOT}']\nwriter = \"thetimes\"\n")
         before = toml.read_bytes()
         ws.ensure(Wiki(mac.call_tool), "cht_1")
         assert toml.read_bytes() == before
@@ -101,7 +101,7 @@ def old_install(mac):
             text = (ws.ASSETS / asset).read_text().replace("{today}", "2026-09-24").replace("{chat}", "cht_1")
         path = root / rel
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text.replace(f"{ROOT}/thefoundertimes.md", f"{OLD}/theplowtimes.md")
+        path.write_text(text.replace(f"{ROOT}/thetimes.md", f"{OLD}/theplowtimes.md")
                         .replace(ROOT, OLD))
 
     put(f"_meta/schemas/{OLD}.md", "schema.md")
@@ -109,8 +109,8 @@ def old_install(mac):
     put(f"{OLD}/qa.md", "qa.md")
     put(f"{OLD}/resources.md", "resources.md")
     meta = {"category": "projects", "sources": [{"resource": "plow-chat:cht_1"}], "created": "2026-09-28",
-            "updated": "2026-09-28", "paper": f"[The Founder Times](/{OLD}/theplowtimes.md)"}
-    put(OLD_EDITION, text=join_page({"type": "Edition", "title": "The Founder Times, 2026-09-28",
+            "updated": "2026-09-28", "paper": f"[The Times](/{OLD}/theplowtimes.md)"}
+    put(OLD_EDITION, text=join_page({"type": "Edition", "title": "The Times, 2026-09-28",
                                      "description": "Edition", "tags": ["edition"],
                                      "date": "2026-09-28", **meta}, "# Edition\n"))
     put(OLD_RUN, text=join_page({"type": "Synthesis", "title": "Priority desk run",
@@ -123,8 +123,8 @@ def old_install(mac):
 
 class TestLegacyRoot:
     def test_the_paper_writes_under_its_own_name(self):
-        assert ROOT == "projects/thefoundertimes"
-        assert OVERVIEW == f"{ROOT}/thefoundertimes.md"
+        assert ROOT == "projects/thetimes"
+        assert OVERVIEW == f"{ROOT}/thetimes.md"
 
     def test_an_old_install_moves_to_the_new_root_and_leaves_the_old_one(self, mac):
         before = old_install(mac)
@@ -132,13 +132,13 @@ class TestLegacyRoot:
         root = wiki_dir(mac)
         assert f"moved 5 pages from {OLD}" in did
         edition = (root / ROOT / "editions" / "2026-09-28.md").read_text()
-        assert f"paper: '[The Founder Times](/{OVERVIEW})'" in edition
+        assert f"paper: '[The Times](/{OVERVIEW})'" in edition
         assert (root / ROOT / "runs" / "2026-09-26T0707" / "state.md").exists()
         overview = (root / OVERVIEW).read_text()
         assert f"/{ROOT}/qa.md" in overview and OLD not in overview
         assert OLD not in (root / QA).read_text()
         assert {p: p.read_bytes() for p in (root / OLD).rglob("*") if p.is_file()} == before
-        assert f'[roots."{ROOT}"]\nwriter = "thefoundertimes"' in (root / "wiki.toml").read_text()
+        assert f'[roots."{ROOT}"]\nwriter = "thetimes"' in (root / "wiki.toml").read_text()
         assert mac.wiki("validate")["exit_code"] == 0
 
     def test_once_moved_the_old_root_is_never_read_again(self, mac):
@@ -161,7 +161,7 @@ class TestLegacyRoot:
         done = wiki_dir(mac) / ROOT / "editions" / "2026-09-28.md"
         done.parent.mkdir(parents=True)
         done.write_text((wiki_dir(mac) / OLD_EDITION).read_text().replace(OLD, ROOT)
-                        .replace("theplowtimes.md", "thefoundertimes.md").replace("# Edition", "# Kept"))
+                        .replace("theplowtimes.md", "thetimes.md").replace("# Edition", "# Kept"))
         ws.ensure(Wiki(mac.call_tool), "cht_1", desk=True)
         assert "# Kept" in done.read_text()
         assert mac.wiki("validate")["exit_code"] == 0

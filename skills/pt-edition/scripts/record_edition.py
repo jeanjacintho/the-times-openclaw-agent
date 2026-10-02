@@ -4,7 +4,7 @@
 usage: record_edition.py <run/<id>/edition.json>
 
 Run once the chat leg is out (pt-edition), never before: the wiki records what
-the owner received. The day's page is projects/thefoundertimes/editions/<date>.md;
+the owner received. The day's page is projects/thetimes/editions/<date>.md;
 each edition that day appends one `## HH:MM edition` block, stamped in the
 owner's own zone (`owner_time.owner_now()`), never the container's: the
 advisor's card, then every section the owner chose (anything with a
@@ -227,11 +227,11 @@ def record(wiki, edition_json, chat, now):
         already = existing is not None and mark in existing
         if not already:
             if existing is None:
-                meta = {"type": "Edition", "title": f"The Founder Times, {edition['date']}",
+                meta = {"type": "Edition", "title": f"The Times, {edition['date']}",
                         "description": "", "category": "projects", "tags": ["edition"],
                         "paper": PAPER_LINK, "date": edition["date"], "sources": [],
                         "created": now.isoformat(timespec="seconds")}
-                body = f"# The Founder Times, {edition['date']}\n"
+                body = f"# The Times, {edition['date']}\n"
             else:
                 meta, body = split_page(existing)
             sections_meta = meta.setdefault("sections", {})

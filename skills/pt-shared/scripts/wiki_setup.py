@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""wiki_setup.py -- make the owner's wiki ready for The Founder Times.
+"""wiki_setup.py -- make the owner's wiki ready for The Times.
 
 usage: wiki_setup.py [--desk]
 
@@ -9,14 +9,14 @@ each daily pass (--desk), and record_edition.py before it writes.
 
   - no ~/Plow/wiki          -> `wiki init ~/Plow/wiki` through Latch's plugin
   - an install from before the rename, with projects/theplowtimes declared
-    and projects/thefoundertimes not yet: every page the wiki's index lists under
+    and projects/thetimes not yet: every page the wiki's index lists under
     the old root is copied to the new one once, its links rewritten. The old
     folder and its wiki.toml entry stay as they were; nothing reads them after.
   - the paper's schema and page, when absent, from pt-shared/assets/wiki/
-  - with --desk: entities/owner/goals.md and projects/thefoundertimes/qa.md, when
+  - with --desk: entities/owner/goals.md and projects/thetimes/qa.md, when
     absent. An install from before the wiki carries the body of
     ~/Plow/prioritization.md over once (the old file stays; it is the owner's).
-  - projects/thefoundertimes declared in wiki.toml, when its parsed roots lack it
+  - projects/thetimes declared in wiki.toml, when its parsed roots lack it
     (whatever spelling declares them), appended last so a run that failed
     halfway runs again; no other line of the file is touched.
 

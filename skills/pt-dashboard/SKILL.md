@@ -1,9 +1,9 @@
 ---
 name: pt-dashboard
-description: The Founder Times' cron spec — one nightly job per active subscription plus the pruning of stale pt-* jobs — and the idempotent registration that replays them from the topic store. Use when asked to set up, re-register, inspect or repair the paper's crons, after rebuilding the agent's home, and after pt-intake adds or cancels a subscription.
+description: The Times' cron spec — one nightly job per active subscription plus the pruning of stale pt-* jobs — and the idempotent registration that replays them from the topic store. Use when asked to set up, re-register, inspect or repair the paper's crons, after rebuilding the agent's home, and after pt-intake adds or cancels a subscription.
 ---
 
-# The Founder Times — the cron spec
+# The Times — the cron spec
 
 Two shapes plus the paper, all derived from `/var/lib/plow/pt/topics.json`
 at run time — unlike `ld-dashboard`'s fixed seven rows, this spec is the

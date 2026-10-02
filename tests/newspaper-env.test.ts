@@ -6,7 +6,7 @@ import { newspaperEnv } from "../boot/newspaper-env.ts";
 const self = { type: "agent" as const, relationship: "self", line: { uid: "ln_phone" } };
 const owner = { type: "member" as const, role: "owner", uid: "mem_owner" };
 const identity: Identity = {
-  agent: { name: "The Founder Times" },
+  agent: { name: "The Times" },
   line: { uid: "ln_phone" },
   mcp_url: "https://relay.test/mcp/dev_1",
   chats: [{ uid: "cht_dm", status: "active", participants: [self, owner] }],

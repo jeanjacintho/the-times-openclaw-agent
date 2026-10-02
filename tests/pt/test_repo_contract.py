@@ -524,7 +524,7 @@ class TestSoul:
         edition = (ROOT / "pt-edition" / "SKILL.md").read_text()
         assert "one ⏳ line" in intake
         assert "Only your final reply reaches the chat" in " ".join(soul.split())
-        assert "The-Founder-Times-" in edition
+        assert "The-Times-" in edition
         assert "--filename" in edition
         script = ROOT / "pt-shared" / "scripts" / "chat_status.py"
         assert script.is_file()
@@ -867,7 +867,7 @@ class TestSkills:
             "rewrite every reference to the owner by name or role into direct",
             "question in the owner's language -- the literal value read during Orient",
             "is a defect, not a style choice",
-            "`RUN_PAGE=~/Plow/wiki/projects/thefoundertimes/runs/<run-datetime>/state.md`",
+            "`RUN_PAGE=~/Plow/wiki/projects/thetimes/runs/<run-datetime>/state.md`",
             "sanitized `reads`",
             "reopens decisive public read receipts",
             "never contain raw private queries, selectors, URLs, or excerpts",
@@ -1211,7 +1211,7 @@ class TestDeployment:
         assert "ARG AGENTSVIEW_VERSION=0.44.0" in text
         assert "037ea7a46d52e06b20363b4aa7cd7f28e32f31d8215803d6e9a0c96bac5818e3" in text
         assert "6f3c76ebe119826a2def1ae226c3573b214d396a3ed7c477ef282b1063345b87" in text
-        assert "AGENT_ID=thefoundertimes" in text
+        assert "AGENT_ID=thetimes" in text
 
     def test_license(self):
         text = (REPO / "LICENSE").read_text()

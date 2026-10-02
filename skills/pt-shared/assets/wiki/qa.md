@@ -1,10 +1,10 @@
 ---
 type: Synthesis
 title: The advisor's Q&A on your company
-description: The open questions and current sourced facts that most change The Founder Times' advice.
+description: The open questions and current sourced facts that most change The Times' advice.
 category: projects
 tags: [advisor]
-paper: "[The Founder Times](/projects/thefoundertimes/thefoundertimes.md)"
+paper: "[The Times](/projects/thetimes/thetimes.md)"
 sources:
   - resource: plow-chat:{chat}
 created: {today}

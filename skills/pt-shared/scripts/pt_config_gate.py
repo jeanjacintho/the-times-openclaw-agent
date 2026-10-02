@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared structural gate for the pt-config (the Founder Times' pt/config.json).
+"""Shared structural gate for the pt-config (the Times' pt/config.json).
 
 This is the SINGLE shared definition of "installed" for the pt-config. It runs
 in the agent container, invoked as:

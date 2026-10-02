@@ -1,4 +1,4 @@
-# The Founder Times (inspired by Mayfield)
+# The Times (inspired by Mayfield)
 
 Your morning paper, printed. It researches on your Mac and puts a sourced page
 in the tray — PDF in chat if you'd rather.
@@ -53,8 +53,8 @@ set — "send it now" included — never as a live essay in the same turn.
 You need Git, Docker Compose, and [plow-agents](https://github.com/plow-pbc/plow-agents).
 
 ```sh
-git clone https://github.com/jeanjacintho/the-founder-times-openclaw-agent.git
-cd the-founder-times-openclaw-agent
+git clone https://github.com/jeanjacintho/the-times-openclaw-agent.git
+cd the-times-openclaw-agent
 
 plow-agents login                 # text the printed code
 plow-agents lines                 # pick a free line
@@ -87,7 +87,7 @@ plow-agents deploy REGISTRY/REPOSITORY@sha256:DIGEST --line LINE_UID
 
 A cloud host injects the credentials; there is no `plow-credentials` file.
 The image lists itself on the [Agent Index](https://aiworthusing.com/agent-index)
-as `thefoundertimes` (`AGENT_ID`, `AGENT_NAME`, `AGENT_BLURB` in the Dockerfile)
+as `thetimes` (`AGENT_ID`, `AGENT_NAME`, `AGENT_BLURB` in the Dockerfile)
 and reports its token usage through the base's pinned reporter.
 
 ## Your Mac: Latch, the printer and the wiki
@@ -100,7 +100,7 @@ could not source, and a print that cannot reach the printer is reported in
 chat in your language.
 
 The printer is whatever CUPS on the Mac calls it (`lpstat -p`); setup asks
-once. The wiki is `~/Plow/wiki/projects/thefoundertimes/`.
+once. The wiki is `~/Plow/wiki/projects/thetimes/`.
 
 ## How it runs
 

@@ -47,16 +47,16 @@ class TestComposePayload:
         assert (
             post.attachment_filename(
                 "/var/lib/plow/pt/run/edition.pdf",
-                "The-Founder-Times-2026-09-17.pdf",
+                "The-Times-2026-09-17.pdf",
             )
-            == "The-Founder-Times-2026-09-17.pdf"
+            == "The-Times-2026-09-17.pdf"
         )
         with pytest.raises(SystemExit, match="filename"):
             post.attachment_filename("edition.pdf", "../secret.pdf")
 
     def test_text_only_when_no_pdf(self):
-        payload = post.compose_payload("THE FOUNDER TIMES")
-        assert payload == {"body": "THE FOUNDER TIMES"}
+        payload = post.compose_payload("THE TIMES")
+        assert payload == {"body": "THE TIMES"}
 
     def test_text_only_refuses_blank_stdin(self):
         with pytest.raises(SystemExit, match="no edition text"):
@@ -74,8 +74,8 @@ class TestTextFileFlag:
 
     def test_reads_the_edition_text_from_a_file(self, tmp_path):
         f = tmp_path / "edition.chat.txt"
-        f.write_text("THE FOUNDER TIMES\nfront page\n", encoding="utf-8")
-        assert post.read_text_file(str(f)) == "THE FOUNDER TIMES\nfront page"
+        f.write_text("THE TIMES\nfront page\n", encoding="utf-8")
+        assert post.read_text_file(str(f)) == "THE TIMES\nfront page"
 
     def test_missing_file_is_refused_by_name(self, tmp_path):
         with pytest.raises(SystemExit, match="text-file"):
@@ -102,7 +102,7 @@ class TestMissedPrintIsReported:
 
     def _main(self, tmp_path, monkeypatch, argv, run=None, configured=True, language="English"):
         (tmp_path / "edition.json").write_text('{"date": "2026-09-22"}', encoding="utf-8")
-        (tmp_path / "edition.chat.txt").write_text("THE FOUNDER TIMES", encoding="utf-8")
+        (tmp_path / "edition.chat.txt").write_text("THE TIMES", encoding="utf-8")
         cfg = tmp_path / "config.json"
         cfg.write_text(json.dumps({"owner": {"language": language},
                                    "printer": {"configured": configured, "name": "JV"}}),

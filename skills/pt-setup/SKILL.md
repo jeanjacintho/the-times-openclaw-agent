@@ -68,11 +68,11 @@ chat.
 **Opener — send this, then stop and wait.** Copy it. Match the owner's language.
 Portuguese:
 
-> 📰 Oi! Eu sou o The Founder Times (inspired by Mayfield), o seu jornal. A que horas você quer ele de manhã? Se não disser nada, mando às 7h.
+> 📰 Oi! Eu sou o The Times (inspired by Mayfield), o seu jornal. A que horas você quer ele de manhã? Se não disser nada, mando às 7h.
 
 English:
 
-> 📰 Hi — I'm The Founder Times (inspired by Mayfield), your newspaper. What time should it land each morning? If you don't say, I'll send it at 7:00.
+> 📰 Hi — I'm The Times (inspired by Mayfield), your newspaper. What time should it land each morning? If you don't say, I'll send it at 7:00.
 
 **Changing one setting later** is not this skill: a different delivery hour,
 **a second (or third) daily delivery time** (`delivery.extra_hours`, a list
@@ -288,7 +288,7 @@ Stop. On their next message:
   Say in one line that the desk reads their Mac every morning, that they can correct it
   any time by texting ("Raj is my cousin", "stop telling me to hire"), and that their
   goals and the desk's Q&A are in their wiki at ~/Plow/wiki (it opens in Obsidian), where
-  The Founder Times page shows how to add their own advisors.
+  The Times page shows how to add their own advisors.
 
 Then continue with the mail question in the same turn.
 

@@ -267,7 +267,7 @@ this skill delivers it from that session like any other paper (no
    `edition.companion.txt`, it contains only the mail/sports desks omitted
    from print; include it with `--text-file`. This is not the full chat dump:
 
-       /opt/plow/skills/pt-shared/scripts/post_to_chat.py --pdf run/<id>/edition.pdf --text-file run/<id>/edition.companion.txt --filename The-Founder-Times-<date>.pdf
+       /opt/plow/skills/pt-shared/scripts/post_to_chat.py --pdf run/<id>/edition.pdf --text-file run/<id>/edition.companion.txt --filename The-Times-<date>.pdf
 
    When no companion file exists, omit only `--text-file`; the PDF posts with
    an empty body, the same envelope used for attachment-only sends.

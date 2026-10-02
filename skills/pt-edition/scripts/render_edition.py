@@ -46,7 +46,7 @@ sys.path.insert(
 )
 from owner_phrases import phrase  # noqa: E402
 from pt_paths import config_file  # noqa: E402
-DEFAULT_MASTHEAD = "THE FOUNDER TIMES"
+DEFAULT_MASTHEAD = "THE TIMES"
 KINDS = ("section", "assignment")
 # Standing newspaper desks. weather and calendar always run; mail only when
 # pt/config.json says mail.configured. news is every owner-chosen section

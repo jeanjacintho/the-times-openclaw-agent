@@ -544,7 +544,7 @@ class TestMasthead:
 class TestChat:
     def test_header_and_section(self):
         text = render.render_chat(edition(), render.DEFAULT_MASTHEAD)
-        assert text.startswith("THE FOUNDER TIMES \u2014 Sep 11, 2026")
+        assert text.startswith("THE TIMES \u2014 Sep 11, 2026")
         assert "\u25b8 Weather in Sao Paulo" in text
         assert "Sources: https://example.com/weather" in text
 
@@ -846,7 +846,7 @@ class TestHtml:
     def test_location_in_header_and_placeholder(self):
         data = edition(location="Sao Paulo")
         text = render.render_chat(data, render.DEFAULT_MASTHEAD)
-        assert text.startswith("THE FOUNDER TIMES \u2014 Sep 11, 2026 \u2014 Sao Paulo")
+        assert text.startswith("THE TIMES \u2014 Sep 11, 2026 \u2014 Sao Paulo")
         page = render.render_html(data, "The Daily", "{{LOCATION}}|{{SECTIONS}}")
         assert page.startswith("Sao Paulo|")
 
@@ -923,7 +923,7 @@ class TestMain:
     def test_prints_chat_to_stdout(self, tmp_path, capsys):
         path = write(tmp_path, edition())
         assert render.main([str(path)]) == 0
-        assert "THE FOUNDER TIMES" in capsys.readouterr().out
+        assert "THE TIMES" in capsys.readouterr().out
 
     def test_writes_chat_file(self, tmp_path):
         path = write(tmp_path, edition())

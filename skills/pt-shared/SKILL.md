@@ -59,16 +59,16 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   print-miss line and the priority card's "Advice from" line). A library, not a flow
   script: nothing invokes it, the pt-* scripts import it.
 - `scripts/wiki.py` — the paper's pages in the owner's wiki (`~/Plow/wiki`, plow-wiki):
-  the root `projects/thefoundertimes` (writer `thefoundertimes`), the shared
+  the root `projects/thetimes` (writer `thetimes`), the shared
   `entities/owner/goals.md`, the OKF page format, and `check()` = `wiki validate`
   then `wiki index` through Latch's wiki plugin, failing only on the paper's own pages.
 - `scripts/wiki_setup.py` — make `~/Plow/wiki` ready for the paper. Bare:
   `wiki_setup.py` or `wiki_setup.py --desk`. Creates the wiki with `wiki init` when
   the Mac has none, copies an install's pages from the pre-rename root
-  `projects/theplowtimes` to `projects/thefoundertimes` once (links rewritten; the old
+  `projects/theplowtimes` to `projects/thetimes` once (links rewritten; the old
   folder and its `wiki.toml` entry are left as they were and never read again), writes
   the paper's schema and page when absent, declares
-  `projects/thefoundertimes` in `wiki.toml` (appending; no other root is touched), and
+  `projects/thetimes` in `wiki.toml` (appending; no other root is touched), and
   with `--desk` the goals page and the desk's Q&A, carrying an older install's notes
   file over once. Prints `WIKI:ready` or `WIKI:set up …`;
   `error: wiki not ready — …` exits non-zero. **This bullet is the contract.**
@@ -76,7 +76,7 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   Editions / Your advisors tables), the paper's page, the goals page, the desk's Q&A.
 - `scripts/post_to_chat.py` — the edition's chat leg: POST the PDF plus its
   chat-only mail/sports companion when present, or chat text if there is no PDF.
-  `--filename The-Founder-Times-<date>.pdf` is the name shown in chat (the
+  `--filename The-Times-<date>.pdf` is the name shown in chat (the
   run file stays `edition.pdf` on disk). `--hold-until HH:MM` is a scheduled paper's
   send clock: while it is ahead the paper is staged in `pt/outbox/` for the
   no-agent `pt-deliver` job (`--flush-outbox`), never slept on in the session;
