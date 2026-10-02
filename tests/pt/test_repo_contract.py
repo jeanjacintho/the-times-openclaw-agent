@@ -1005,7 +1005,7 @@ class TestSkills:
         # a folio line, the lead as a large headline, and news in columns.
         template = (ROOT / "pt-edition" / "template.html").read_text()
         assert "nameplate" in template
-        assert "inspired by Mayfield" in template
+        assert "your personal newspaper" in template
         assert "folio" in template
         assert "dropcap" in template
         assert "border-image" not in template  # no fake photo frames

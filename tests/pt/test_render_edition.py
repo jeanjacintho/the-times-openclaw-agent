@@ -535,11 +535,11 @@ class TestMasthead:
         monkeypatch.setenv("PT_MASTHEAD", "   ")
         assert render.masthead() == render.DEFAULT_MASTHEAD
 
-    def test_printed_page_carries_the_mayfield_credit(self):
+    def test_printed_page_carries_the_tagline(self):
         template = (ROOT / "pt-edition" / "template.html").read_text()
         page = render.render_html(edition(), render.DEFAULT_MASTHEAD, template)
         assert render.DEFAULT_MASTHEAD in page
-        assert "inspired by Mayfield" in page
+        assert "your personal newspaper" in page
 
 class TestChat:
     def test_header_and_section(self):
