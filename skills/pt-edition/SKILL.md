@@ -95,10 +95,11 @@ HTML.** Hand-write `edition.json` under the run directory:
   the named miss when research failed); it has no sources line. The chat
   edition still prints weather sources and gaps.
 - **`desk` is the newspaper department.** At the front of the printed paper,
-  weather occupies the masthead ear, calendar occupies the sole right rail,
-  and news occupies the main well. The longest news body leads at full width; article order breaks ties
-  and otherwise preserves the pair below it. Mail and sports remain in the
-  chat edition but do not consume print space. Every desk keeps the same title / headline /
+  weather occupies the masthead ear, the calendar is the agenda band that
+  leads the page at full width, news occupies the main well, and sports
+  scores sit in a rail beside it. The longest news body leads at full width;
+  article order breaks ties and otherwise preserves the pair below it. Mail
+  stays in the chat edition and takes no print space. Every desk keeps the same title / headline /
   body / sources shape.
 - **`forecast` is optional, weather-only, and drawn — not written.** Exactly
   one day object: `day` (short label, e.g. "Tue"), `date` (e.g.
@@ -231,7 +232,7 @@ this skill delivers it from that session like any other paper (no
 
 2. **Send the PDF yourself, by running `post_to_chat.py --pdf`, instead of
    returning the transcript as your final response.** If the renderer wrote
-   `edition.companion.txt`, it contains only the mail/sports desks omitted
+   `edition.companion.txt`, it contains only the mail desk, omitted
    from print; include it with `--text-file`. This is not the full chat dump:
 
        /opt/plow/skills/pt-shared/scripts/post_to_chat.py --pdf run/<id>/edition.pdf --text-file run/<id>/edition.companion.txt --filename The-Times-<date>.pdf

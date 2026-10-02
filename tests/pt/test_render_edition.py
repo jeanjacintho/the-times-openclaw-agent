@@ -612,6 +612,43 @@ class TestHtml:
         page = render.render_html(edition(), render.DEFAULT_MASTHEAD, "{{LEAD}}")
         assert 'href="https://example.com/weather"' in page
 
+    AGENDA = {"kind": "section", "title": "Agenda", "desk": "calendar", "headline": "One call",
+              "body": "10:00 Call", "schedule": [{"time": "10:00", "title": "Call", "icon": "call"}],
+              "sources": ["Calendar.app"]}
+    GAME = {"kind": "section", "title": "Games", "desk": "sports", "body": "Final.",
+            "games": [{"home": "Otters", "away": "Foxes", "status": "final", "home_score": 3, "away_score": 1}],
+            "sources": ["https://example.com/scores"]}
+    NEWS = {"kind": "section", "topic_id": "t_8c1d", "title": "Harbor", "body": "The ferry moved.",
+            "sources": ["https://example.com/n"]}
+    TEMPLATE = "{{AGENDA}}|{{BODY}}"
+
+    def _page(self, *sections):
+        return render.render_html(edition(sections=list(sections)), render.DEFAULT_MASTHEAD, self.TEMPLATE)
+
+    def test_the_agenda_leads_the_page_above_the_news(self):
+        page = self._page(self.NEWS, self.AGENDA)
+        agenda, body = page.split("|")
+        assert 'class="agenda"' in agenda and "section--calendar" in agenda and "Call" in agenda
+        assert "ferry moved." in body and "Call" not in body
+
+    def test_sports_scores_print_in_a_rail_beside_the_news(self):
+        body = self._page(self.NEWS, self.GAME).split("|")[1]
+        assert 'class="side-rail"' in body and "section--sports" in body and "page-body--full" not in body
+        assert body.index("ferry moved.") < body.index("section--sports")
+
+    def test_without_sports_the_news_takes_the_whole_width(self):
+        body = self._page(self.NEWS, self.AGENDA).split("|")[1]
+        assert "page-body--full" in body and "side-rail" not in body
+
+    def test_a_paper_with_only_an_agenda_prints_no_empty_news_block(self):
+        agenda, body = self._page(self.AGENDA).split("|")
+        assert "agenda" in agenda and body == ""
+        assert "nothing to report" not in agenda.lower() and "top-row" not in body
+
+    def test_sports_without_news_still_print(self):
+        body = self._page(self.AGENDA, self.GAME).split("|")[1]
+        assert "section--sports" in body and "top-row" not in body
+
     def test_legacy_sudoku_placeholder_is_consumed_without_a_puzzle(self):
         page = render.render_html(edition(), render.DEFAULT_MASTHEAD, "X{{SUDOKU}}Y")
         assert page == "XY"
@@ -678,7 +715,7 @@ class TestMain:
         render.main([str(path), "--chat", str(out)])
         assert "Weather in Sao Paulo" in out.read_text()
 
-    def test_writes_chat_only_desk_companion(self, tmp_path):
+    def test_writes_the_chat_only_mail_companion(self, tmp_path):
         path = write(tmp_path, edition(sections=[
             {"kind": "section", "topic_id": "t_8c1d", "title": "Lead", "desk": "news",
              "body": "Printed.", "sources": []},
@@ -690,7 +727,7 @@ class TestMain:
         out = tmp_path / "edition.companion.txt"
         render.main([str(path), "--companion", str(out)])
         assert "Inbox summary." in out.read_text()
-        assert "Final score." in out.read_text()
+        assert "Final score." not in out.read_text()  # sports prints on the page
         assert "Printed." not in out.read_text()
 
     def test_no_chat_only_desks_remove_a_stale_companion(self, tmp_path):

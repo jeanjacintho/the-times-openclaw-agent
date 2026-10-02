@@ -70,7 +70,7 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
 - `assets/wiki/` — the seeds `wiki_setup.py` writes: the root's schema (fields and the
   Editions table) and the paper's page.
 - `scripts/post_to_chat.py` — the edition's chat leg: POST the PDF plus its
-  chat-only mail/sports companion when present, or chat text if there is no PDF.
+  chat-only mail companion when present, or chat text if there is no PDF.
   `--filename The-Times-<date>.pdf` is the name shown in chat (the
   run file stays `edition.pdf` on disk). `--hold-until HH:MM` is a scheduled paper's
   send clock: while it is ahead the paper is staged in `pt/outbox/` for the

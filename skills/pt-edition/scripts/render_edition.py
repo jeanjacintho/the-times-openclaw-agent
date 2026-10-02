@@ -444,10 +444,10 @@ def render_chat(edition, name, language=""):
 
 
 def render_companion(edition):
-    """Chat-only desks omitted from the print layout."""
+    """The mail desk, omitted from the print layout: the owner's inbox stays in chat."""
     sections = [
         section for _index, section in ordered_sections(edition["sections"])
-        if desk_of(section) in ("mail", "sports")
+        if desk_of(section) == "mail"
     ]
     if not sections:
         return ""
@@ -908,8 +908,27 @@ def render_html(edition, name, template_text, language=""):
         desks_inline_html = f'<div class="desks-row">{cells}</div>'
     weather_ear = weather_ear_html(weather, language)
 
+    # The agenda leads the page: a full-width band under the folio. Sports
+    # scores sit in a rail beside the news; with nothing beside them the news
+    # takes the whole width, and a paper with no news prints no empty rule.
+    agenda_html = f'<div class="agenda">{calendar_html}</div>' if calendar_html else ""
+    main_html = "\n".join(part for part in (
+        f'<div class="top-row"><div class="lead-cell">{lead_html}</div></div>' if lead_html else "",
+        news_pair_html,
+    ) if part)
+    if main_html and sports_html:
+        body_html = (f'<div class="page-body"><main class="news-column">{main_html}</main>'
+                     f'<aside class="side-rail">{sports_html}</aside></div>')
+    elif main_html or sports_html:
+        body_html = (f'<div class="page-body page-body--full"><main class="news-column">'
+                     f'{main_html or sports_html}</main></div>')
+    else:
+        body_html = ""
+
     location = html.escape((edition.get("location") or "").strip() or "One copy")
     slots = {
+        "{{AGENDA}}": agenda_html,
+        "{{BODY}}": body_html,
         "{{MASTHEAD}}": html.escape(name),
         "{{DATE}}": html.escape(pretty_date(edition["date"])),
         "{{LOCATION}}": location,
@@ -951,7 +970,7 @@ def main(argv=None):
     parser.add_argument("--html", default=None, help="write the printable HTML here")
     parser.add_argument("--pdf", default=None, help="write a PDF here (needs weasyprint)")
     parser.add_argument("--companion", default=None,
-                        help="write chat-only mail/sports desks here when present")
+                        help="write the chat-only mail desk here when present")
     parser.add_argument("--config", default=CONFIG_DEFAULT,
                         help="pt/config.json; its owner.language picks the page's labels")
     args = parser.parse_args(argv)

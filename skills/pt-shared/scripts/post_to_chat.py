@@ -18,7 +18,7 @@ text-only POST below always was.
 
 Text is read from ``--text-file`` when provided, otherwise from STDIN only
 when there is no PDF. With ``--pdf``, ``--text-file`` is reserved for the
-small mail/sports companion omitted from the printed page; without it the
+small mail companion omitted from the printed page; without it the
 message is attachment-only. The full chat transcript is never a caption.
 Omit ``--pdf`` to post text only (the fallback when weasyprint could not
 write the file).
