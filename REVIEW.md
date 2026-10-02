@@ -26,6 +26,15 @@ the inline version. A finding must name what breaks for one owner's paper
 today. A reliability guess about load this repo will not see is at most
 `[low]`.
 
+**Security findings name a reachable loss.** The owner trusts their own
+agent. "A prompt-injected or misbehaving agent could do X with the owner's
+own data" is not blocking unless X reaches another person, spends money, or
+moves the owner's data out of their Mac and chat. Before labeling a finding
+`[blocking] security`, state the concrete loss if it fired today; without one
+it is at most `[low]`, worded as a question. Do not prescribe sandboxes,
+allowlists or validation layers for threats this operating point does not
+face.
+
 **The one carve-out is the owner's data.** The agent holds that owner's
 credential and reaches their mail, calendar, browser and printer through
 Latch, so a credential, a chat id, an account name or a real person's data
