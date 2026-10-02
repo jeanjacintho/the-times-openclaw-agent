@@ -380,7 +380,7 @@ class TestMain:
     def test_now_queues_the_main_papers_own_prompt_as_a_one_shot(
             self, tmp_path, monkeypatch, capsys):
         # "Send me the paper now" is the SAME job the 7am run fires. Measured
-        # live: a variant of the recipe skipped the advisor, so an on-demand
+        # live: a variant of the recipe skipped a standing desk, so an on-demand
         # paper came back with a gap card and one story.
         sched = FakeScheduler(registered_like_spec([]))
         rc = run_main(tmp_path, monkeypatch, [], sched, argv=["--now"])

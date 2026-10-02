@@ -38,7 +38,7 @@ test("only the owner's phone DM becomes main; other peers and groups stay isolat
   });
 });
 
-test("group chats get their own binding and only the signal tool, for everyone", () => {
+test("group chats get their own binding and no tools, for everyone", () => {
   const config = renderConfig(identity, "http://api:8000");
   // No session override: the default per-group key carries the group id the
   // tool policy is resolved from, and the owner's exact DM binding stays first.

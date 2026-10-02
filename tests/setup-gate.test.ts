@@ -82,7 +82,7 @@ for (const room of ["owner-dm", "group"] as const) test(`an inbound ${room} turn
   } else {
     // A group never gets setup; it gets the listen-only instructions.
     assert.ok(injected && injected !== "not-called");
-    assert.match(injected.prependContext!, /GROUP LISTENING/);
+    assert.match(injected.prependContext!, /NO_REPLY/);
     assert.doesNotMatch(injected.prependContext!, /READY/);
   }
 });
@@ -119,7 +119,7 @@ for (const [label, ctx, injects] of [
     on(name: string, handler: typeof hook) { if (name === "before_prompt_build") hook = handler; } } as never);
   const result = await hook!({ prompt: "oi", messages: [] }, ctx);
   if (injects === "listen") {
-    assert.match(result!.prependContext!, /GROUP LISTENING/);
+    assert.match(result!.prependContext!, /NO_REPLY/);
     assert.doesNotMatch(result!.prependContext!, /READY/);
   } else if (injects) assert.match(result!.prependContext!, /```text\nREADY\nLANG:English\n```/);
   else assert.equal(result, undefined);
