@@ -16,8 +16,17 @@ on `plow-pbc/plow-openclaw-agent`. `README.md` owns
 the product prose and this file does not repeat it. Flag drift between that
 prose and the code, in either direction.
 
-**Stage:** pre-PMF, early. A handful of installs, each one owner's paper
-running in Docker against their own Plow line. The agent holds that owner's
+**Operating point:** pre-PMF, a handful of installs, each one owner's paper
+running in Docker against their own Plow line. One owner, one container, one
+paper a day: there is no shared state, no concurrency between owners and no
+scale to design for. So the dominant lens is **YAGNI**. Decline remedies that
+add retries, fallbacks, locks, caches, multi-tenant or concurrency guards, or
+abstractions for a second caller that does not exist; prefer the deletion or
+the inline version. A finding must name what breaks for one owner's paper
+today. A reliability guess about load this repo will not see is at most
+`[low]`.
+
+**The one carve-out is the owner's data.** The agent holds that owner's
 credential and reaches their mail, calendar, browser and printer through
 Latch, so a credential, a chat id, an account name or a real person's data
 anywhere in the tracked tree is blocking. That includes the edition renders
@@ -54,5 +63,5 @@ directly, and they come ahead of anything else:
 |---|---|
 | Flag a section, a default, a team followed or a news topic for being **specific to one owner's paper**. Being one person's paper is the reason this repo exists. Generality here is bloat, not a fix. | Flag a change that a **sibling repo owns**. Research, mail, calendar and print go through Latch's tools and the gog grammar. The paper's wiki pages follow `plow-wiki`'s schema and CLI. The usage reporter is `agent-index-client`, which this repo only pins. Account, login, mint and revoke belong to `plow-agents`. The test: who else would have to change if this fact changed? |
 
-**Update cadence:** edit this when the stage changes. Product and architecture
+**Update cadence:** edit this when the operating point moves. Product and architecture
 edits belong in `README.md`, not here.
