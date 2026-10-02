@@ -1,48 +1,20 @@
-# Standing desks — how the daily paper fills priority, weather, calendar, mail and sports
+# Standing desks — how the daily paper fills weather, calendar, mail and sports
 
 These are not topics. They are fixed newspaper departments, run in this
-file's order. The daily run always fills weather and calendar. Priority
-runs only when `pt/config.json` has `"priority": { "configured": true }`.
-Mail joins only when it has `"mail": { "configured": true }`; sports
+file's order. The daily run always fills weather and calendar.
+Mail joins only when `pt/config.json` has `"mail": { "configured": true }`; sports
 joins only when it has `"sports": { "configured": true }`. Ordinary desk notes go under
 `/var/lib/plow/pt/run/desk-<name>/notes.json` (same shape as a topic
 notes file, `topic_id` omitted; every desk file also carries a top-level
 `"date": "<today>"`, and `render_edition.py` refuses one with none or another
 day's when the edition carries a standing desk, so a failed gather cannot
 reprint yesterday; a one-topic subscription renders no desk and is not checked). pt-edition compiles them with
-`"desk": "priority"|"weather"|"calendar"|"mail"|"sports"`. Never mark them in topics.py.
+`"desk": "weather"|"calendar"|"mail"|"sports"`. Never mark them in topics.py.
 
 Every Latch call is the same two tools the print path uses:
 `plow_run_command` (argv array, no shell, no `~`) and, when a call returns
 `{"status":"pending","handle":…}`, `plow_get_result` until `ready`. A
 401/412/deny is one blocked source: log it, do not retry.
-
-## Priority — first in every paper, when configured
-
-One rule for every scheduled paper: if `run/desk-priority/tournament.json` is today's
-accepted checkpoint (dated today, at its completed third-generation gate — what
-`render_edition.py --tournament` checks), reuse it and start below at weather. The on-demand
-copy never waits on a tournament: it reuses that checkpoint whatever its date, and pt-edition
-prints an older one with its `as_of` date; an older checkpoint is never a reason to stop the
-edition. With none to reuse (none today for a scheduled
-paper; none ever accepted for the on-demand copy), run
-`/opt/plow/skills/pt-shared/scripts/wiki_setup.py --desk`,
-then load `pt-priority` and follow it.
-
-`pt-priority` alone writes the atomic
-`run/desk-priority/tournament.json` checkpoint. It reads the owner's sources itself and spends no
-web budget. The morning run has no checkpoint for today yet; a later paper the same day reuses it.
-The tournament gets a reserved 150-minute window; delivery waits for its required third generation,
-and the global batch budget starts after priority completes. Never stop its tournament early to
-save time for weather, calendar, mail, sports, or news; those desks use the time that remains.
-Complete this desk before opening the shared browser or starting weather, calendar, mail, sports,
-or news. Immediately after loading `pt-priority`, Orient and create the run's wiki state page
-before any later-desk work. After compaction, resume that page alongside the last atomic
-`tournament.json` deliverable checkpoint.
-An older delivered card is generation-zero input, never proof that today's desk is complete.
-**Skipping this desk in the canonical scheduled paper is a bug, not a shortcut**:
-a desk that cannot publish writes its reason to `could_not_source`, and `render_edition.py`
-refuses a configured paper with no priority section.
 
 ## 1. Location, then weather — every daily run
 

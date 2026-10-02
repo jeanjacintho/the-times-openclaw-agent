@@ -63,7 +63,7 @@ export function renderConfig(identity: Identity, apiBase: string, llm: LlmRoute 
       ...(llm.provider === "openai" ? {
         models: { "openai/*": { agentRuntime: { id: "openclaw" } } }, modelPolicy: { allow: [] },
       } : {}),
-      // The advisor tournament spawns up to six critics at once; children never spawn.
+      // A research pass may spawn up to six children at once; children never spawn.
       // Delegation stays a suggestion so owner chat turns are not pushed into sub-agents.
       subagents: { maxChildrenPerAgent: 6, maxConcurrent: 6, maxSpawnDepth: 1, delegationMode: "suggest" },
     } },
@@ -128,7 +128,7 @@ const ownedPaths = [
   ["tools", ["tools"]],
   ["commands", ["commands"]],
   ["identity", ["agents", "entries", "main", "identity"]],
-  // The paper's model, bootstrap budget and advisor sub-agents, and the skills
+  // The paper's model, bootstrap budget and sub-agents, and the skills
   // it runs, ship with the image: an owner edit here would break the edition.
   ["agent-defaults", ["agents", "defaults"]],
   ["skills", ["skills"]],

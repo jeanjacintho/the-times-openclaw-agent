@@ -4,7 +4,7 @@ from __future__ import annotations
 import pytest
 
 from latch_mcp import LatchError
-from wiki import GOALS, ROOT, WRITER, Wiki, join_page, split_page
+from wiki import ROOT, WRITER, Wiki, join_page, split_page
 
 
 def declare_root(mac):
@@ -58,5 +58,4 @@ class TestWiki:
         declare_root(mac)
         w = Wiki(mac.call_tool)
         w.write("entities/people/someone.md", page(type="Person", category="entities", description=None))
-        w.write(GOALS, page(type="Owner", category="entities"))
         w.check()

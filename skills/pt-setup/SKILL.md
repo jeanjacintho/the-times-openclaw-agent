@@ -23,13 +23,13 @@ which question comes after which:**
 
 One line, no interpreter prefix, no shell operators — same rule SOUL.md
 gives `setup_needed.py`. `key` is a dot-path (`local_hour`,
-`printer.configured`, `printer.name`, `priority.configured`, `mail.configured`, `news_asked`);
+`printer.configured`, `printer.name`, `mail.configured`, `news_asked`);
 `true`/`false` become real JSON booleans, anything else stays a string. A
 value with a space needs its own quoting, e.g. `printer.name="HP LaserJet 4"`.
 It prints two lines:
 
     DRAFT:<fields already recorded>
-    NEXT_QUESTION=<hour|printer|priority|mail|news|close>
+    NEXT_QUESTION=<hour|printer|mail|news|close>
 
 **Send exactly the one message `NEXT_QUESTION` calls for, then stop.**
 Not that question plus the probe for the one after it. Not that question
@@ -234,46 +234,6 @@ Latch parked or unreachable is also an answer, not a reason to skip
   once the check works.
 
 Send only the `NEXT_QUESTION` it prints (question 3a), then stop.
-
-## NEXT_QUESTION=priority
-
-This is the advisor desk (`priority.configured`), a Salyer-style
-adversarial tournament.
-
-Copy the question (CHAT_VOICE), in the owner's language:
-
-> ⭐ Every morning the paper can open with what Patrick Salyer would tell you after watching your last day. What are you trying to make true over the next few quarters? (or "no" to skip the advisor desk)
-
-Stop. On their next message:
-
-- **No** → `record_setup.py <config path> priority.configured=false`
-- **An answer** → first put it in their wiki. Run `chat_status.py --busy` before the
-  first Latch call and after each write; do not type that you are writing anything.
-  1. `/opt/plow/skills/pt-shared/scripts/wiki_setup.py --desk` — it makes
-     `~/Plow/wiki` ready (creating it when the Mac has none) and prints `WIKI:…`.
-  2. `plow__plow_read_file` `path=~/Plow/wiki/entities/owner/goals.md`; add
-     their answer as one `- ` line under `## Goals` unless it is already there, ending
-     with its item — the shape intake's corrections use: a Messages chat plus rowid, a
-     named mail reader's message id, or the `plow_chat:…` handle bare
-     `/opt/plow/skills/pt-shared/scripts/chat_message_id.py` prints for the owner's own
-     message; every setup answer arrives as one, so this is never optional. Set `updated:` to today. Read it again
-     immediately before the write and fold whatever
-     changed since the first read into what you write — the owner edits this page in
-     Obsidian, and their line is evidence of what they say, never something a pass
-     drops. Then `plow__plow_write_file` it back. Every other line, frontmatter
-     included, stays as it was. Never paste the page back in chat.
-  Only once the goal is on the page: `record_setup.py <config path> priority.configured=true`.
-  No re-openable handle for that message (issue #85's non-phone-backed line) → same as
-  No, no wiki write: the goal isn't supportable, so the desk stays unconfigured rather
-  than stand on nothing — the paper still prints its other desks.
-  An `error:` from step 1, or a denied or failed write → say so in one line and record
-  nothing; the question stays open.
-  Say in one line that the desk reads their Mac every morning, that they can correct it
-  any time by texting ("Raj is my cousin", "stop telling me to hire"), and that their
-  goals and the desk's Q&A are in their wiki at ~/Plow/wiki (it opens in Obsidian), where
-  The Times page shows how to add their own advisors.
-
-Then continue with the mail question in the same turn.
 
 **3a. Ask whether the paper should carry today's mail.** Copy the locked
 line. Weather and calendar always run; mail is opt-in. Send only this, then stop.

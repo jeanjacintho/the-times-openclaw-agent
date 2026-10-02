@@ -897,28 +897,16 @@ class TestRunPromptsDelegateDelivery:
     def test_paper_prompt_reopens_sections(self):
         assert "reopen-sections" in crons.paper_prompt()
 
-    def test_all_papers_share_a_lock_longer_than_the_tournament(self):
+    def test_all_papers_share_one_lock_with_a_long_lifetime(self):
         for prompt in (crons.paper_prompt("07:00"), crons.paper_prompt(focus="12:00")):
             assert "--name paper-workspace --today" in prompt
             assert "--stale-minutes 240" in prompt
 
-    def test_scheduled_papers_reuse_only_todays_advice(self):
-        for prompt in (crons.paper_prompt("07:00"), crons.paper_prompt("12:00", focus="12:00")):
-            assert "prepare_daily_run.py --preserve-priority" in prompt
-            assert "reuse today's accepted checkpoint" in prompt
-            assert "else run the tournament" in prompt
-
-    def test_on_demand_copy_never_waits_on_a_tournament_it_can_reuse(self):
-        # Owner's call: the copy reuses the newest accepted advice of any
-        # date, printed with its as-of date; only a paper that has never had
-        # accepted advice runs the tournament.
-        prompt = crons.paper_prompt()
-        assert "prepare_daily_run.py --preserve-priority" in prompt
-        assert "newest accepted checkpoint" in prompt and "whatever its date" in prompt
-        assert '"as_of"' in prompt
-        assert "only if none has ever been accepted" in prompt
-        assert "reuse today's" not in prompt
-        assert "An older checkpoint is never a reason to stop the paper" in prompt
+    def test_papers_clear_yesterdays_scratch_and_start_with_the_standing_desks(self):
+        for prompt in (crons.paper_prompt("07:00"), crons.paper_prompt("12:00", focus="12:00"), crons.paper_prompt()):
+            assert "prepare_daily_run.py " in prompt and "--preserve" not in prompt
+            assert "tournament" not in prompt and "priority desk" not in prompt
+            assert "every standing desk" in prompt
 
     @pytest.mark.parametrize("prompt", [
         crons.paper_prompt(),
@@ -931,26 +919,6 @@ class TestRunPromptsDelegateDelivery:
         release = prompt.index("run_lock.py release", refusal)
         research = prompt.index("Then run pt-research")
         assert refusal < release < research
-
-
-class TestTournamentWindow:
-    """A delivery hour near midnight clamps the lead far below what a fresh
-    tournament needs; nothing refuses it, so the prompt states the window."""
-
-    def test_a_scheduled_prompt_states_its_window_and_the_floor(self):
-        p = crons.paper_prompt(hold_until="09:30", lead_minutes=150)
-        assert "starts 150 minutes before 09:30" in p
-        assert f"under {crons.MIN_TOURNAMENT_MINUTES} minutes" in p
-        assert "owner_time.py minutes-until 09:30" in p
-        assert crons.MIN_TOURNAMENT_MINUTES == 50
-
-    def test_a_near_midnight_hour_states_the_clamped_window(self):
-        jobs = crons.desired_jobs([], "00:20", TZ, 150)
-        assert "starts 20 minutes before 00:20" in jobs[0]["prompt"]
-
-    def test_the_on_demand_copy_states_no_window(self):
-        p = crons.paper_prompt(lead_minutes=150)
-        assert "minutes-until" not in p and "starts 150 minutes before" not in p
 
 
 def deliver_row(argv=None, enabled=True):

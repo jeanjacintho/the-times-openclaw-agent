@@ -24,7 +24,7 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   every other value is kept verbatim as a string, so a dotted or underscored
   value needs no quoting — only a value containing a space does. Prints
   `DRAFT:<fields recorded, or "none">` then
-  `NEXT_QUESTION=<hour|printer|priority|mail|news|close>`; that second line — never
+  `NEXT_QUESTION=<hour|printer|mail|news|close>`; that second line — never
   the draft's shape, never the chat thread — decides what `pt-setup` asks
   next. Called as `record_setup.py <config.json path> --done` it instead
   **clears** the draft (prints `DRAFT:cleared`) — the close step's last
@@ -56,24 +56,19 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   second path to prefer over it.
 - `scripts/owner_language.py` — `is_portuguese(language)`, the one place that
   reads `owner.language` for repo-authored copy (the chat wait lines, the
-  print-miss line and the priority card's "Advice from" line). A library, not a flow
+  print-miss line and the page's labels). A library, not a flow
   script: nothing invokes it, the pt-* scripts import it.
 - `scripts/wiki.py` — the paper's pages in the owner's wiki (`~/Plow/wiki`, plow-wiki):
-  the root `projects/thetimes` (writer `thetimes`), the shared
-  `entities/owner/goals.md`, the OKF page format, and `check()` = `wiki validate`
+  the root `projects/thetimes` (writer `thetimes`), the OKF page format, and `check()` = `wiki validate`
   then `wiki index` through Latch's wiki plugin, failing only on the paper's own pages.
 - `scripts/wiki_setup.py` — make `~/Plow/wiki` ready for the paper. Bare:
-  `wiki_setup.py` or `wiki_setup.py --desk`. Creates the wiki with `wiki init` when
-  the Mac has none, copies an install's pages from the pre-rename root
-  `projects/theplowtimes` to `projects/thetimes` once (links rewritten; the old
-  folder and its `wiki.toml` entry are left as they were and never read again), writes
+  `wiki_setup.py`. Creates the wiki with `wiki init` when
+  the Mac has none, writes
   the paper's schema and page when absent, declares
-  `projects/thetimes` in `wiki.toml` (appending; no other root is touched), and
-  with `--desk` the goals page and the desk's Q&A, carrying an older install's notes
-  file over once. Prints `WIKI:ready` or `WIKI:set up …`;
+  `projects/thetimes` in `wiki.toml` (appending; no other root is touched). Prints `WIKI:ready` or `WIKI:set up …`;
   `error: wiki not ready — …` exits non-zero. **This bullet is the contract.**
 - `assets/wiki/` — the seeds `wiki_setup.py` writes: the root's schema (fields and the
-  Editions / Your advisors tables), the paper's page, the goals page, the desk's Q&A.
+  Editions table) and the paper's page.
 - `scripts/post_to_chat.py` — the edition's chat leg: POST the PDF plus its
   chat-only mail/sports companion when present, or chat text if there is no PDF.
   `--filename The-Times-<date>.pdf` is the name shown in chat (the
@@ -89,16 +84,15 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   calls it.
 - `scripts/owner_time.py` — the owner's own clock, not the container's:
   called bare as `owner_time.py minutes-until HH:MM` it prints the minutes left
-  until that time today (negative once passed; the priority desk's window check).
+  until that time today (negative once passed).
   As a library, `owner_now()` (an aware datetime) and `owner_today()`, from `owner.timezone`
   in `pt/config.json`. Falls back to the container's clock only when the
   config or the key is absent; a config that exists but can't be trusted (bad
   JSON, an unreadable file, an unknown zone name) raises. Shared by
   `history.py`'s window, `record_edition.py`'s heading and
   `post_to_chat.py --hold-until`.
-- `pt-priority/scripts/history.py recent [--topic ID]` — what this paper printed on the last 7
-  days, read from the wiki's edition pages: bare, the advisor desk's cards, `[{"date", "desk"}]`;
-  with a news section's topic id, that section's own blocks,
+- `scripts/history.py recent --topic ID` — what one news section printed on the last 7
+  days, read from the wiki's edition pages:
   `[{"date", "headline", "printed": [{"claim", "url"}]}]`, so a pass knows which sources it has
   already spent.
 - `pt-edition/scripts/record_edition.py <edition.json>` — the delivered edition onto the day's
@@ -113,14 +107,8 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   (`acquired` / `stale-takeover` / `held`) and always exits 0 on acquire.
 - `scripts/prepare_daily_run.py` — immediately after any paper lock is acquired,
   archives prior dated and desk scratch beside `run/` and prints `READY`.
-  Every paper passes `--preserve-priority` (desks.md decides which advisor checkpoint
-  is reused); every other desk is cleared.
   It preserves topic workspaces, the live lock, and setup evidence. The wiki is delivered
   history; archived scratch is never today's completed work.
-- `scripts/chat_message_id.py` — the item for the owner's own Plow chat message:
-  bare, `HANDLE:plow_chat:<chat>:<message>` for their latest message or
-  `HANDLE:none` (fails closed, never a guess); `read <handle>` re-opens it as
-  JSON or prints `NOT_FOUND`. Same `GET /v1/chats/<uid>/messages` the channel reads.
 - `scripts/owner_phrases.py template | record | status` — the paper's fixed
   lines (setup wait lines, print-miss line, failed-turn notice, page labels) in
   the owner's language: curated English and Portuguese, and for any other

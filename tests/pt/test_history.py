@@ -1,4 +1,4 @@
-"""history.py: what the advisor's desk printed lately, read back from the wiki."""
+"""history.py: what a news section printed lately, read back from the wiki."""
 from __future__ import annotations
 
 import json
@@ -9,47 +9,19 @@ import pytest
 from conftest import load_module
 from wiki import EDITIONS, Wiki, join_page
 
-history = load_module("history", "pt-priority/scripts/history.py")
+history = load_module("history", "pt-shared/scripts/history.py")
 TODAY = date(2026, 9, 19)
 
 
-def day_page(mac, day, card=None, sections=None):
+def day_page(mac, day, sections=None):
     path = mac.home / "Plow" / "wiki" / EDITIONS / f"{day}.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     meta = {"type": "Edition", "date": day,
-            **({"priority": card} if card else {}),
             **({"sections": sections} if sections else {})}
     path.write_text(join_page(meta, f"# The Times, {day}\n"))
 
 
 class TestRecent:
-    def test_the_last_weeks_cards_oldest_first_without_the_empty_days(self, mac):
-        day_page(mac, "2026-09-11", {"headline": "too old"})
-        day_page(mac, "2026-09-12", {"headline": "Call Raj"})
-        day_page(mac, "2026-09-15")  # an edition without the desk
-        day_page(mac, "2026-09-18", {"headline": "Close the pilot"})
-        assert history.recent(Wiki(mac.call_tool), TODAY) == [
-            {"date": "2026-09-12", "desk": {"headline": "Call Raj"}},
-            {"date": "2026-09-18", "desk": {"headline": "Close the pilot"}},
-        ]
-
-    def test_todays_own_edition_is_not_history(self, mac):
-        # A second run on the same date must not read the first back as "yesterday".
-        day_page(mac, "2026-09-18", {"headline": "Close the pilot"})
-        day_page(mac, "2026-09-19", {"headline": "This morning's headline"})
-        assert history.recent(Wiki(mac.call_tool), TODAY) == [
-            {"date": "2026-09-18", "desk": {"headline": "Close the pilot"}},
-        ]
-
-    def test_only_todays_edition_is_no_history(self, mac):
-        day_page(mac, "2026-09-19", {"headline": "This morning's headline"})
-        assert history.recent(Wiki(mac.call_tool), TODAY) == []
-
-    def test_no_pages_is_no_history(self, mac):
-        assert history.recent(Wiki(mac.call_tool), TODAY) == []
-
-
-class TestRecentTopic:
     def test_what_this_section_printed_oldest_first_with_its_sources(self, mac):
         day_page(mac, "2026-09-17", sections={"t_9f2a": {
             "headline": "Apple approved Poke",
@@ -74,8 +46,7 @@ class TestRecentTopic:
     def test_todays_edition_is_in_topic_history_for_a_second_paper_the_same_day(self, mac):
         # An afternoon focused paper or a live copy is the most likely thing
         # to reprint this morning's section -- exactly what this history
-        # exists to stop -- so unlike the desk's, the topic window reaches
-        # through today's own page.
+        # exists to stop -- so the window reaches through today's own page.
         day_page(mac, "2026-09-19", sections={"t_9f2a": {
             "headline": "This morning's headline",
             "printed": [{"claim": "This morning's claim", "url": "https://a.example"}]}})
@@ -85,18 +56,9 @@ class TestRecentTopic:
         ]
 
     def test_a_day_that_did_not_print_this_section_is_left_out(self, mac):
-        day_page(mac, "2026-09-17", {"headline": "Close the pilot"})
+        day_page(mac, "2026-09-17")
         day_page(mac, "2026-09-18", sections={"t_0001": {"headline": "Another section", "printed": []}})
         assert history.recent(Wiki(mac.call_tool), TODAY, topic="t_9f2a") == []
-
-    def test_the_desks_own_history_is_unchanged(self, mac):
-        # The priority desk's reader must not notice this flag exists.
-        day_page(mac, "2026-09-18", {"headline": "Close the pilot"},
-                 sections={"t_9f2a": {"headline": "The dollar",
-                                       "printed": [{"claim": "BRL up", "url": "https://fx.example"}]}})
-        assert history.recent(Wiki(mac.call_tool), TODAY) == [
-            {"date": "2026-09-18", "desk": {"headline": "Close the pilot"}},
-        ]
 
 
 class TestCli:
@@ -104,7 +66,7 @@ class TestCli:
         mac.asleep = True
         monkeypatch.setattr(history, "connect", lambda: Wiki(mac.call_tool))
         with pytest.raises(SystemExit) as exc:
-            history.main(["recent"])
+            history.main(["recent", "--topic", "t_9f2a"])
         assert str(exc.value).startswith("error: history unavailable — Mac unreachable")
 
     def test_a_bad_owner_timezone_is_an_error(self, mac, monkeypatch):
@@ -118,10 +80,14 @@ class TestCli:
 
         monkeypatch.setattr(history, "owner_today", bad_owner_today)
         with pytest.raises(SystemExit) as exc:
-            history.main(["recent"])
+            history.main(["recent", "--topic", "t_9f2a"])
         assert str(exc.value).startswith("error: history unavailable — ")
 
-    def test_the_topic_flag_prints_that_sections_blocks(self, mac, monkeypatch, capsys):
+    def test_a_topic_is_required(self):
+        with pytest.raises(SystemExit):
+            history.main(["recent"])
+
+    def test_it_prints_that_sections_blocks(self, mac, monkeypatch, capsys):
         day_page(mac, "2026-09-18", sections={"t_9f2a": {
             "headline": "Cognition bought Poke",
             "printed": [{"claim": "Low nine figures", "url": "https://tc.example/x"}]}})

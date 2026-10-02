@@ -18,7 +18,7 @@ that exists but can't be trusted (bad JSON, an unreadable file, an unknown
 zone name) raises instead of guessing -- a silently wrong window or heading
 would read as valid.
 
-CLI, for a scheduled paper checking its own window (pt-priority Orient):
+CLI, for a scheduled paper checking its own window:
 
     owner_time.py minutes-until HH:MM
 

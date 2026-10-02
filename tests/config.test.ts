@@ -169,7 +169,7 @@ test("the Plow MCP filter exposes only the Latch tools used by newspaper researc
   assert.ok(!config.tools.alsoAllow.includes("group:plugins"), "do not grant every plugin tool");
 });
 
-test("the advisor tournament can run six leaf sub-agents without chat turns preferring delegation", () => {
+test("research can run six leaf sub-agents without chat turns preferring delegation", () => {
   assert.deepEqual(renderConfig(identity, "http://api:8000").agents.defaults.subagents, {
     maxChildrenPerAgent: 6, maxConcurrent: 6, maxSpawnDepth: 1, delegationMode: "suggest",
   });

@@ -26,21 +26,18 @@ def _daily_directory(name: str) -> bool:
     return bool(separator) and slot.startswith("daily") and (not suffix or suffix.isdigit()) and _dated_directory(day)
 
 
-def _scratch(path: Path, preserve_priority: bool = False) -> bool:
+def _scratch(path: Path) -> bool:
     if path.is_dir():
-        if preserve_priority and path.name == "desk-priority":
-            return False
         return (path.name.startswith("desk-") or _dated_directory(path.name)
                 or _daily_directory(path.name))
     return path.name in {"chat-status.json", "seal-session.json"}
 
 
-def prepare(pt_home: Path, now: datetime | None = None,
-            preserve_priority: bool = False) -> Path | None:
+def prepare(pt_home: Path, now: datetime | None = None) -> Path | None:
     run = pt_home / "run"
     run.mkdir(parents=True, exist_ok=True)
     scratch = sorted(
-        (path for path in run.iterdir() if _scratch(path, preserve_priority)),
+        (path for path in run.iterdir() if _scratch(path)),
         key=lambda path: path.name,
     )
     if not scratch:
@@ -65,13 +62,8 @@ def prepare(pt_home: Path, now: datetime | None = None,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--preserve-priority", action="store_true",
-        help="keep the accepted advisor checkpoint while clearing every other desk",
-    )
-    args = parser.parse_args()
-    home = pt_home()
-    prepare(home, preserve_priority=args.preserve_priority)
+    parser.parse_args()
+    prepare(pt_home())
     # The caller needs only the clean-workspace result.  Do not advertise the
     # recovery path to the model that is about to research today's paper.
     print("READY")

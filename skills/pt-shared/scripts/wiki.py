@@ -2,9 +2,7 @@
 
 The wiki is plow-wiki: an Obsidian vault at ~/Plow/wiki in OKF v0.2, kept by
 the `wiki` plugin Latch bundles. The paper owns one root,
-projects/thetimes (writer `thetimes`), and shares one page,
-entities/owner/goals.md. Installs from before the rename kept their pages
-under projects/theplowtimes; wiki_setup.py copies them over once. Pages move with plow_read_file and
+projects/thetimes (writer `thetimes`). Pages move with plow_read_file and
 plow_write_file (no approval inside ~/Plow); the CLI runs through
 plow_run_command, under whatever approval mode the Mac is in.
 """
@@ -18,14 +16,8 @@ from latch_mcp import connect as latch_connect
 WIKI = "~/Plow/wiki"
 WRITER = "thetimes"
 ROOT = f"projects/{WRITER}"
-LEGACY_WRITER = "theplowtimes"
-LEGACY_ROOT = f"projects/{LEGACY_WRITER}"
-LEGACY_OVERVIEW = f"{LEGACY_ROOT}/{LEGACY_WRITER}.md"
 OVERVIEW = f"{ROOT}/{WRITER}.md"
 EDITIONS = f"{ROOT}/editions"
-QA = f"{ROOT}/qa.md"
-RESOURCES = f"{ROOT}/resources.md"
-GOALS = "entities/owner/goals.md"
 SCHEMA = f"_meta/schemas/{ROOT}.md"
 PAPER_LINK = f"[The Times](/{OVERVIEW})"
 
@@ -79,7 +71,7 @@ class Wiki:
         """`wiki validate`, then `wiki index`. Only a problem on a page this paper
         writes fails it; another agent's page is that agent's to fix."""
         code, out = self.run("validate")
-        ours = [line for line in out.splitlines() if line.startswith((ROOT, GOALS))]
+        ours = [line for line in out.splitlines() if line.startswith(ROOT)]
         if ours or code not in (0, 1):
             raise LatchError("wiki validate: " + ("; ".join(ours) or out.strip()))
         code, out = self.run("index", write=True)

@@ -21,7 +21,6 @@ finalize = load_module("finalize_setup", "pt-setup/scripts/finalize_setup.py")
 COMPLETE = {
     "local_hour": "07:00",
     "printer": {"configured": True, "name": "virtual_printer_online"},
-    "priority": {"configured": False},
     "mail": {"configured": True},
     "news_asked": True,
 }
@@ -47,18 +46,17 @@ class TestWritesAValidConfig:
         assert written["printer"] == {"configured": True, "name": "virtual_printer_online"}
         assert written["mail"]["configured"] is True
         assert "signals" not in written
-        assert written["delivery"]["lead_minutes"] == 0
+        assert written["delivery"]["lead_minutes"] == 60
         assert "CONFIG:written" in out
 
-    @pytest.mark.parametrize(("hour", "lead"), [("07:00", 150), ("00:20", 150)])
-    def test_priority_lead_minutes(self, tmp_path, hour, lead):
-        # The lead covers pt-priority's three mandatory generations, so it is the tournament's own
-        # 150-minute window. The nominal lead is stored unclamped -- 00:20 keeps its 150 here and
-        # registration clamps it per slot. Chat still waits for the hour: lead is the start clock,
-        # not the send clock.
-        config = seed(tmp_path, dict(COMPLETE, local_hour=hour, priority={"configured": True}))
+    @pytest.mark.parametrize("hour", ["07:00", "00:20"])
+    def test_research_lead_minutes(self, tmp_path, hour):
+        # A deep research pass runs ~25-35 minutes, so the paper starts an hour ahead. The nominal
+        # lead is stored unclamped -- 00:20 keeps its 60 here and registration clamps it per slot.
+        # Chat still waits for the hour: lead is the start clock, not the send clock.
+        config = seed(tmp_path, dict(COMPLETE, local_hour=hour))
         finalize.main(["finalize_setup.py", str(config), "--owner-tz", "America/Sao_Paulo"])
-        assert json.loads(config.read_text())["delivery"]["lead_minutes"] == lead
+        assert json.loads(config.read_text())["delivery"]["lead_minutes"] == 60
 
     @pytest.mark.parametrize("container_tz", ["UTC", "", "Asia/Tokyo"])
     def test_stores_the_hour_the_owner_named_whatever_the_container_clock(

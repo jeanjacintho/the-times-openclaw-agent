@@ -3,7 +3,7 @@
 Not a flow script: a library the pt-* scripts import. `record_owner_language.py`
 writes `owner.language`; this reads it, for the mechanical lines that are
 repo-authored copy rather than model prose (the chat wait lines, the
-print-miss line, the priority card's date line).
+print-miss line, the page's date line).
 
 One predicate, so `pt-PT`, `pt_AO` and `pt-BR` owners all get the same
 Portuguese copy from the same config value.

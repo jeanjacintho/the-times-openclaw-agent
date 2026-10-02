@@ -62,8 +62,6 @@ The ten checks:
      mail through Latch (Gmail via plow-gog first, Mail.app if that fails);
      false is an explicit no.
   9. no string value anywhere may be a leftover [UPPER_SNAKE] placeholder.
-  10. priority, when present, has a boolean `configured`. Absent priority
-     is valid and means the desk is off.
 
 The owner's name, location, or any other personal fact is deliberately not
 among the checks, and not in the schema: location is fetched each run via
@@ -192,12 +190,6 @@ def gate(config):
         mail_configured = _index(mail, "configured")
         if not isinstance(mail_configured, bool):
             failures.append("mail.configured is not a boolean")
-
-    # 10. priority, when present, is a boolean switch. Absent means the desk is
-    #     off. Its pages live at fixed paths in the owner's wiki (wiki.py).
-    priority = _index(config, "priority")
-    if priority is not None and not isinstance(_index(priority, "configured"), bool):
-        failures.append("priority.configured is not a boolean")
 
     # 9. no leftover [UPPER_SNAKE] placeholder anywhere.
     if any(_PLACEHOLDER_RE.match(s) for s in _all_strings(config)):

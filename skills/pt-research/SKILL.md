@@ -40,7 +40,7 @@ that found 3 of 5 sources reports 3 sources; it does not keep hunting.
    racing it.
 
    Then, for a `section`, read what it already printed:
-   `/opt/plow/skills/pt-priority/scripts/history.py recent --topic <id>`
+   `/opt/plow/skills/pt-shared/scripts/history.py recent --topic <id>`
    — `[{"date", "headline", "printed": [{"claim", "url"}]}]` for today and
    the 7 days before it, oldest first. Those URLs are already spent and
    those claims are already made: **this pass is what changed since the
@@ -108,8 +108,8 @@ Two rules make a batch survivable in one session:
   Keep a running total: when the batch budget is spent, stop starting new
   topics and write down what each one got. The edition ships with what was
   found — a section that got nothing says so — it never runs over to finish.
-  Desks take a thin slice (local Latch reads plus one weather search; the
-  advisor's passes keep pt-priority's own clock), then news sections share the rest.
+  Desks take a thin slice (local Latch reads plus one weather search),
+  then news sections share the rest.
 
 Notes go to each topic's own `run/<topic_id>/notes.json`, flushed as you go,
 so a session that dies halfway keeps every topic it finished. Desk notes

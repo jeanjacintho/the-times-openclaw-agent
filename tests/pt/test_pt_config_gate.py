@@ -200,23 +200,6 @@ class TestInvariants:
         out, _ = run_gate({**VALID, "mail": {"configured": "yes"}}, tmp_path)
         assert "mail.configured is not a boolean" in out
 
-    def test_priority_absent_is_valid(self, tmp_path):
-        config = dict(VALID)
-        config.pop("priority", None)
-        out, _ = run_gate(config, tmp_path)
-        assert out == ""
-
-    def test_priority_configured_must_be_boolean(self, tmp_path):
-        out, _ = run_gate(
-            {**VALID, "priority": {"configured": "true", "file": "~/Plow/prioritization.md"}},
-            tmp_path,
-        )
-        assert out == "priority.configured is not a boolean"
-
-    def test_a_configured_desk_needs_no_path(self, tmp_path):
-        out, _ = run_gate({**VALID, "priority": {"configured": True}}, tmp_path)
-        assert out == ""
-
     def test_placeholder_anywhere(self, tmp_path):
         out, _ = run_gate(
             {**VALID, "owner": {"timezone": "[OWNER_TZ]"}}, tmp_path
