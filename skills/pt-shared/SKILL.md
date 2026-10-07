@@ -112,11 +112,12 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
 - `scripts/set_desks.py <weather|calendar|mail> <on|off>` — atomic,
   gate-checked choice of newspaper departments; missing switches mean off.
   Prints `DESK:<department>:<on|off>`. Setup uses `record_setup.py`.
-- `scripts/set_sports.py add <team> <league> | remove <team> | list` — the ONLY way the
-  teams the sports desk follows change; gate-checked, atomic, at most five teams, prints
-  `SPORTS:<team> (<league>), …` or `SPORTS:none`. Adding the first team turns
-  `sports.configured` on, removing the last turns it off. `league` is the ESPN slug the
-  desk reads (`bra.1`, `nba`, `eng.1`). Called bare; never hand-edit the `sports` block.
+- `scripts/set_sports.py add <team> <league> | remove <team> | add-league <name> <league> | remove-league <league> | list [--draft]` —
+  the only writer of followed teams and whole leagues; five teams and five
+  leagues maximum, atomic and validated. `SPORTS:` lists both. ESPN slugs
+  include `bra.1`, `nba`, `nfl`. Removing the last team leaves the department
+  on if leagues remain; removing the last of both turns it off. `--draft`
+  updates the existing setup draft and finalize_setup.py carries it forward.
 - `scripts/owner_phrases.py template | record | status` — the paper's fixed
   lines (setup wait lines, print-miss line, failed-turn notice, page labels) in
   the owner's language: curated English and Portuguese, and for any other

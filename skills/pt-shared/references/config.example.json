@@ -18,5 +18,10 @@
   },
   "calendar": {
     "configured": false
+  },
+  "sports": {
+    "configured": false,
+    "followed": [],
+    "leagues": []
   }
 }

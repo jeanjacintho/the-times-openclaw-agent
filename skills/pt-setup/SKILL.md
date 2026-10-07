@@ -291,11 +291,11 @@ and agenda off; no news or sports is invented. Send only this, then stop.
 
 Portuguese:
 
-> 🗞️ O que você quer no jornal? Clima, agenda, jogos de um time, notícias de algum assunto… Você escolhe e pode mudar depois.
+> 🗞️ O que você quer no jornal? Clima, agenda, jogos de um time ou liga, notícias de algum assunto… Você escolhe e pode mudar depois.
 
 English:
 
-> 🗞️ What would you like in your paper? Weather, your agenda, games from a team, news on a topic… You choose and can change it later.
+> 🗞️ What would you like in your paper? Weather, your agenda, games from a team or league, news on a topic… You choose and can change it later.
 
 **4b. On their next message** (including "nothing" / "skip"), take each
 thing they name by what it is. First record `weather.configured=false
@@ -303,16 +303,15 @@ calendar.configured=false` with `record_setup.py` unless this draft already
 records an explicit choice. Set only the departments they ask for to true
 using `record_setup.py ... weather.configured=true` and/or
 `calendar.configured=true`. Do not add either as a news topic.
-A **team** ("o Flamengo", "the Lakers") is the
-sports desk: `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league>`
-with the ESPN league slug you know for it (`bra.1`, `nba`, `eng.1` …); a team you
-cannot place in a league is taken as a section instead. Anything else is a
-`section` topic via `pt-intake`'s writer (`topics.py add --kind section --depth
-quick`), in the order they say it — that order is the news desk's order. If they
-name more than three sections, take the first three and say the cap; the daily
-run researches every news section in one session and three is the paper's
-news-roster ceiling. Never invent a section or a team they did not ask for. Then,
-regardless of whether they named any:
+A **team** is `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league> --draft`;
+a **whole league** is `set_sports.py add-league "<name>" <league> --draft`.
+Confirm its ESPN slug from the browser when unclear; ask which league if the
+request is ambiguous, never silently turn a league into a news section.
+`--draft` writes the existing setup draft before config.json exists;
+finalize_setup.py carries those choices into the finished config.
+Everything else is a `section` via `topics.py add --kind section --depth quick`,
+in the owner's order. Take at most three news sections, naming the cap.
+Never invent a section, team or league. Then record the completed answer:
 
     record_setup.py /var/lib/plow/pt/config.json news_asked=true
 

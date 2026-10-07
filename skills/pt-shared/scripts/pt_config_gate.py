@@ -65,6 +65,7 @@ The checks:
   10. sports, when present, is `{"configured": <bool>, "followed": [{"team",
      "league"}, ...]}`: at most MAX_FOLLOWED_TEAMS entries, each with a
      non-blank team and league (the ESPN league slug the sports desk reads).
+     Optional leagues is a list of {name, league}, at most five unique slugs.
      Absent means the sports desk is off. Only set_sports.py writes it.
   11. weather.configured and calendar.configured, when present, are booleans.
      Each absent department is off; both require an explicit opt-in.
@@ -79,6 +80,7 @@ import re
 import sys
 
 MAX_FOLLOWED_TEAMS = 5
+MAX_FOLLOWED_LEAGUES = 5
 _PLACEHOLDER_RE = re.compile(r"^\[[A-Z][A-Z0-9_]*\]$")
 _NONBLANK_RE = re.compile(r"\S")
 # The only shape the delivery hour may take: any real "HH:MM". A bare cron
@@ -196,7 +198,7 @@ def gate(config):
         if block is not None and not isinstance(_index(block, "configured"), bool):
             failures.append(f"{desk}.configured is not a boolean")
 
-    # 10. sports, when present, is the sports desk's switch and followed teams.
+    # 10. sports, when present, is the sports desk's switch and followed teams and whole leagues.
     sports = _index(config, "sports")
     if sports is not None:
         if not isinstance(sports, dict):
@@ -212,6 +214,18 @@ def gate(config):
             elif not all(isinstance(i, dict) and isinstance(i.get("team"), str) and isinstance(i.get("league"), str)
                          and _nonblank(i["team"]) and _nonblank(i["league"]) for i in followed):
                 failures.append("sports.followed needs a non-blank team and league on every entry")
+
+            leagues = sports.get("leagues", [])
+            if not isinstance(leagues, list):
+                failures.append("sports.leagues is not a list")
+            elif len(leagues) > MAX_FOLLOWED_LEAGUES:
+                failures.append(f"sports.leagues has more than {MAX_FOLLOWED_LEAGUES} leagues")
+            elif not all(isinstance(i, dict) and isinstance(i.get("name"), str)
+                         and isinstance(i.get("league"), str) and _nonblank(i["name"])
+                         and _nonblank(i["league"]) for i in leagues):
+                failures.append("sports.leagues needs a non-blank name and league on every entry")
+            elif len({i["league"].casefold() for i in leagues}) != len(leagues):
+                failures.append("sports.leagues has duplicate leagues")
 
     # 9. no leftover [UPPER_SNAKE] placeholder anywhere.
     if any(_PLACEHOLDER_RE.match(s) for s in _all_strings(config)):

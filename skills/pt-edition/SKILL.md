@@ -169,7 +169,8 @@ HTML.** Hand-write `edition.json` under the run directory:
 - **Include no more than three news articles, and never hand-split copy.**
   Pagination is the renderer's job: it keeps every included word, news
   that does not fit one Letter sheet continues on page 2+ (WeasyPrint,
-  `column-fill: auto`), each boxed desk stays whole. It never truncates or silently drops a fourth
+  `column-fill: auto`). Large league scoreboards paginate too; individual
+  game rows stay whole. It never truncates or silently drops a fourth
   article.
 - **A desk's notes file must be dated for today's edition.** A desk that
   fails to gather leaves the previous day's `run/desk-*/notes.json` /

@@ -204,7 +204,7 @@ def paper_prompt(hold_until=None, lead_minutes=0, focus=None):
         f"If it refuses, repeat its named roster, run {lock} "
         f"release --name {WORKSPACE_LOCK} --today, and stop before research. "
         f"Then run pt-research: only configured standing desks (weather, calendar, mail "
-        f"require their own configured=true; missing means off; sports follows chosen teams). "
+        f"require their own configured=true; missing means off; sports follows chosen teams and leagues). "
         f"Follow pt-research/references/desks.md in its order, then {roster}. "
         f"Then run pt-edition for the batch, delivering with post_to_chat.py "
         f"per pt-edition/SKILL.md step 2{hold}. "
