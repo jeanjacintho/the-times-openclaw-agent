@@ -17,7 +17,7 @@ docker compose -f "$ROOT/compose.yml" run --no-deps --rm \
   --entrypoint /opt/plow/pt-venv/bin/python3 \
   agent \
   skills/pt-edition/scripts/render_edition.py \
-    index/edition.json --pdf index/.shoot-tmp/edition.pdf --config /dev/null
+    index/edition.json --pdf index/.shoot-tmp/edition.pdf --config index/config.json
 
 pdftoppm -jpeg -r 96 -scale-to-x 783 -scale-to-y 1024 \
   -jpegopt quality=85 "$TMP/edition.pdf" "$TMP/edition-page"

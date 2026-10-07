@@ -28,9 +28,10 @@ that found 3 of 5 sources reports 3 sources; it does not keep hunting.
 
 ## The loop
 
-0. **Paper batch only — standing desks first.** Follow
+0. **Paper batch only — selected standing desks first.** Follow
    `pt-research/references/desks.md` before any news topic; it names every
-   standing desk, when it runs, and in what order. Flush each desk's notes
+   standing desk, its opt-in switch, and its order. Read config before any
+   gather and skip each disabled desk entirely. Flush each desk's notes
    as you go. Do not skip a section because its status was delivered: the
    paper's prompt has already reopened yesterday's.
 1. Read the topic (or each news topic of the batch) from `pt/topics.json` (the id
@@ -60,9 +61,11 @@ that found 3 of 5 sources reports 3 sources; it does not keep hunting.
    the notes file short, name what you looked for in `could_not_source`, and
    let the edition say so. Refilling the column with the story it already
    ran is the failure this history exists to prevent.
-2. Open the browser on the owner's Mac through Latch **once** (the rule
-   below), with the origin starter list in `references/desks.md`. Then
-   navigate.
+2. Open the browser on the owner's Mac through Latch **once** only if a
+   selected weather, sports or news department needs it. Reuse the session
+   if a selected standing desk already opened it. Use only the needed
+   origins from `references/desks.md`. A calendar-and-mail-only paper needs
+   no browser session. Then navigate.
 3. For each page: extract the 2–4 facts it contributes, each with its URL and
    a one-line quote or tight paraphrase. Then move on. Do not re-read a page
    you have used; do not open a page that cannot add a new fact.
@@ -155,7 +158,7 @@ flush the same way.
 ## When you finish — close the browser
 
 Once every desk and every topic in the batch has its notes written (or the
-budget ran out), close the session you opened in step 2 with
+budget ran out), close the browser session if one was opened, with
 `plow_browser_close`, on every exit path, including a budget cutoff or an
 early return. The browser runs on the owner's own Mac: a tab left open is a
 window sitting on their screen, and the next pass opens another on top of it.

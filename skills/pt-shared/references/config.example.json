@@ -1,6 +1,27 @@
 {
-  "owner": { "timezone": "[OWNER_TZ]" },
-  "delivery": { "hour": "[DELIVERY_HOUR]", "lead_minutes": 60 },
-  "printer": { "configured": false, "name": null },
-  "mail": { "configured": false }
+  "owner": {
+    "timezone": "[OWNER_TZ]"
+  },
+  "delivery": {
+    "hour": "[DELIVERY_HOUR]",
+    "lead_minutes": 60
+  },
+  "printer": {
+    "configured": false,
+    "name": null
+  },
+  "mail": {
+    "configured": false
+  },
+  "weather": {
+    "configured": false
+  },
+  "calendar": {
+    "configured": false
+  },
+  "sports": {
+    "configured": false,
+    "followed": [],
+    "leagues": []
+  }
 }

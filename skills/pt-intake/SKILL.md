@@ -24,6 +24,22 @@ Keep `owner.language` current before classifying, per SOUL.md
 read a language from). It is not a confirmation to ask about and not a
 change to narrate.
 
+## Optional departments and sports
+
+For "add weather", "remove my agenda" or "include my emails", use
+`/opt/plow/skills/pt-shared/scripts/set_desks.py <weather|calendar|mail> <on|off>`.
+A missing switch means off. Never make these choices into news topics or
+restart setup. Read the result and confirm the chosen department. Removing
+mail stops both mailbox reads and inclusion in the PDF.
+
+For "follow NFL", "all NBA games" or "Brasileirão scores", use
+`/opt/plow/skills/pt-shared/scripts/set_sports.py add-league "<name>" <league>`;
+for "stop NFL", use `set_sports.py remove-league <league>`. Use `nfl`, `nba`,
+`bra.1` when known; confirm an unfamiliar ESPN slug in the Mac browser and ask
+which competition when ambiguous. Never silently route a league into a generic
+news topic. `set_sports.py list` lists both teams and leagues. At most five
+teams and five leagues; a team and its league share one scoreboard gather.
+
 ## Status questions — answer from the file, then stop
 
 These are ordinary turns, not classifications. Do them and end:
@@ -145,9 +161,8 @@ line" lowers anything.
 Two rules that keep the paper honest:
 
 - **Dedup.** Resolve the new ask against what already exists. "My paper
-  should have weather" when the weather desk already runs every day → point
-  at that desk instead of adding a news section that would search the same
-  forecast twice. Same for calendar and, when configured, mail. "My paper
+  should have weather" → use `set_desks.py weather on`, not a news section
+  that would search the forecast twice. Same for calendar and mail. "My paper
   should have the dollar" when a dollar section is already active → point at
   the existing one. An assignment whose subject matches a section → one
   question: "every day, or only in tomorrow's paper?".

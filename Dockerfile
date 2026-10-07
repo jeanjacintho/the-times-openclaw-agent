@@ -130,7 +130,7 @@ ENV OPENCLAW_STATE_DIR=/var/lib/plow OPENCLAW_CONFIG_PATH=/var/lib/plow/openclaw
 # Agent Index listing. Compose (and a host that injects env) can override without rebuild.
 ENV AGENT_ID=thetimes \
     AGENT_NAME="The Times" \
-    AGENT_BLURB="Your personal newspaper. It prints your schedule, the weather, sports scores and news on what you follow, or sends a PDF to chat." \
+    AGENT_BLURB="Your personal newspaper. Choose news, weather, your agenda, emails and games from teams or leagues. Printed or delivered as a PDF in chat." \
     AGENT_RUNTIME="OpenClaw 2.0"
 # The inherited healthcheck loads config and can race the boot state lock.
 HEALTHCHECK NONE

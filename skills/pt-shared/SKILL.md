@@ -69,8 +69,8 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   `error: wiki not ready — …` exits non-zero. **This bullet is the contract.**
 - `assets/wiki/` — the seeds `wiki_setup.py` writes: the root's schema (fields and the
   Editions table) and the paper's page.
-- `scripts/post_to_chat.py` — the edition's chat leg: POST the PDF plus its
-  chat-only mail companion when present, or chat text if there is no PDF.
+- `scripts/post_to_chat.py` — the edition's chat leg: POST one PDF containing
+  all selected departments, or chat text if there is no PDF.
   `--filename The-Times-<date>.pdf` is the name shown in chat (the
   run file stays `edition.pdf` on disk). `--hold-until HH:MM` is a scheduled paper's
   send clock: while it is ahead the paper is staged in `pt/outbox/` for the
@@ -109,11 +109,15 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   archives prior dated and desk scratch beside `run/` and prints `READY`.
   It preserves topic workspaces, the live lock, and setup evidence. The wiki is delivered
   history; archived scratch is never today's completed work.
-- `scripts/set_sports.py add <team> <league> | remove <team> | list` — the ONLY way the
-  teams the sports desk follows change; gate-checked, atomic, at most five teams, prints
-  `SPORTS:<team> (<league>), …` or `SPORTS:none`. Adding the first team turns
-  `sports.configured` on, removing the last turns it off. `league` is the ESPN slug the
-  desk reads (`bra.1`, `nba`, `eng.1`). Called bare; never hand-edit the `sports` block.
+- `scripts/set_desks.py <weather|calendar|mail> <on|off> [--draft]` — atomic,
+  gate-checked choice of newspaper departments; missing switches mean off.
+  Prints `DESK:<department>:<on|off>`. `--draft` updates the existing setup draft.
+- `scripts/set_sports.py add <team> <league> | remove <team> | add-league <name> <league> | remove-league <league> | list [--draft]` —
+  the only writer of followed teams and whole leagues; five teams and five
+  leagues maximum, atomic and validated. `SPORTS:` lists both. ESPN slugs
+  include `bra.1`, `nba`, `nfl`. Removing the last team leaves the department
+  on if leagues remain; removing the last of both turns it off. `--draft`
+  updates the existing setup draft and finalize_setup.py carries it forward.
 - `scripts/owner_phrases.py template | record | status` — the paper's fixed
   lines (setup wait lines, print-miss line, failed-turn notice, page labels) in
   the owner's language: curated English and Portuguese, and for any other

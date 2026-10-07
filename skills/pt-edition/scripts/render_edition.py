@@ -48,8 +48,8 @@ from owner_phrases import phrase  # noqa: E402
 from pt_paths import config_file  # noqa: E402
 DEFAULT_MASTHEAD = "THE TIMES"
 KINDS = ("section", "assignment")
-# Standing newspaper desks. weather and calendar always run; mail only when
-# pt/config.json says mail.configured. news is every owner-chosen section
+# Optional newspaper desks, each gated by its own configured switch.
+# Missing switches mean off. news is every owner-chosen section
 # and assignment -- same story shape, different page slot.
 DESKS = ("news", "weather", "calendar", "mail", "sports")
 DESK_ORDER = {"weather": 0, "calendar": 1, "mail": 2, "sports": 3, "news": 4}
@@ -351,7 +351,10 @@ def stale_desk_files(edition, run_root):
     if all(desk_of(s) == "news" for s in edition["sections"]):
         return []
     stale = []
+    carried = {f"desk-{desk_of(s)}" for s in edition["sections"]}
     for path in sorted(pathlib.Path(run_root).glob("desk-*/*.json")):
+        if path.parent.name not in carried:
+            continue
         data = _load_json_file(path)
         if data is None:
             continue
@@ -444,14 +447,9 @@ def render_chat(edition, name, language=""):
 
 
 def render_companion(edition):
-    """The mail desk, omitted from the print layout: the owner's inbox stays in chat."""
-    sections = [
-        section for _index, section in ordered_sections(edition["sections"])
-        if desk_of(section) == "mail"
-    ]
-    if not sections:
-        return ""
-    return "\n\n".join(chat_section(section) for section in sections) + "\n"
+    """Compatibility for older cron prompts: mail no longer needs a companion."""
+    # All selected departments are now in the PDF. Clear any old companion.
+    return ""
 
 
 # Forecast drawings: Atlas Icons weather glyphs (MIT), vendored beside
@@ -916,7 +914,10 @@ def render_html(edition, name, template_text, language=""):
         f'<div class="top-row"><div class="lead-cell">{lead_html}</div></div>' if lead_html else "",
         news_pair_html,
     ) if part)
-    if main_html and sports_html:
+    # League scoreboards can be much longer than a team's single game. Keep
+    # large scoreboards out of a table cell so they paginate without clipping.
+    long_sports = sum(len(s.get("games") or []) for s in sports) > 8
+    if main_html and sports_html and not long_sports:
         body_html = (f'<div class="page-body"><main class="news-column">{main_html}</main>'
                      f'<aside class="side-rail">{sports_html}</aside></div>')
     elif main_html or sports_html:
@@ -924,6 +925,11 @@ def render_html(edition, name, template_text, language=""):
                      f'{main_html or sports_html}</main></div>')
     else:
         body_html = ""
+
+    if long_sports:
+        body_html = (f'<div class="page-body page-body--full"><main class="news-column">'
+                     f'{main_html}</main></div>' if main_html else "") + sports_html
+    body_html += mail_html
 
     location = html.escape((edition.get("location") or "").strip() or "One copy")
     slots = {
@@ -970,7 +976,7 @@ def main(argv=None):
     parser.add_argument("--html", default=None, help="write the printable HTML here")
     parser.add_argument("--pdf", default=None, help="write a PDF here (needs weasyprint)")
     parser.add_argument("--companion", default=None,
-                        help="write the chat-only mail desk here when present")
+                        help="remove a legacy mail companion; selected mail is now in the PDF")
     parser.add_argument("--config", default=CONFIG_DEFAULT,
                         help="pt/config.json; its owner.language picks the page's labels")
     args = parser.parse_args(argv)
@@ -983,10 +989,23 @@ def main(argv=None):
     if isinstance(edition, dict):
         fill_news_desk(edition)
     config = _load_json_file(args.config)
+    if config is None and pathlib.Path(args.config).exists():
+        sys.exit("error: newspaper config is not a readable JSON object")
+    config = config or {}
+    for desk in DESKS:
+        block = config.get(desk)
+        if block is not None and (not isinstance(block, dict) or
+                                  not isinstance(block.get("configured"), bool)):
+            sys.exit(f"error: {desk}.configured is not a boolean")
 
     failures = validate(edition)
     if failures:
         sys.exit(f"error: invalid edition.json: {failures}")
+    # Explicit opt-in, including older configs with no weather/calendar switches.
+    edition["sections"] = [s for s in edition["sections"]
+                           if desk_of(s) == "news" or
+                           (config.get(desk_of(s)) or {}).get("configured") is True]
+
     stale = stale_desk_files(edition, pathlib.Path(args.edition).resolve().parent.parent)
     if stale:
         sys.exit(f"error: stale desk notes for edition {edition['date']}: {stale}; "

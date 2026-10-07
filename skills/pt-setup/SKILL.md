@@ -23,7 +23,8 @@ which question comes after which:**
 
 One line, no interpreter prefix, no shell operators — same rule SOUL.md
 gives `setup_needed.py`. `key` is a dot-path (`local_hour`,
-`printer.configured`, `printer.name`, `mail.configured`, `news_asked`);
+`printer.configured`, `printer.name`, `mail.configured`,
+`weather.configured`, `calendar.configured`, `news_asked`);
 `true`/`false` become real JSON booleans, anything else stays a string. A
 value with a space needs its own quoting, e.g. `printer.name="HP LaserJet 4"`.
 It prints two lines:
@@ -77,8 +78,10 @@ English:
 **a second (or third) daily delivery time** (`delivery.extra_hours`, a list
 of "HH:MM" strings alongside `delivery.hour`, each in the owner's own
 clock like `delivery.hour` itself — never ask the zone again), **turning the letters desk
-on or off** (`mail.configured`), or a new printer is a
-one-line conversation that updates `pt/config.json` directly. Before writing
+on or off**, **weather or agenda on or off** (each department has its own
+`configured` switch), or a new printer is a one-line conversation. Change
+weather, calendar or mail with `set_desks.py <weather|calendar|mail> <on|off>`;
+other settings update `pt/config.json` directly. Before writing
 a different `delivery.hour` (the owner's own HH:MM), run `topics.py check-paper
 --deliver-at main --main-hour <HH:MM>`; if it refuses, name its
 roster and leave the setting unchanged. After a valid change, re-run the gate
@@ -236,7 +239,7 @@ Latch parked or unreachable is also an answer, not a reason to skip
 Send only the `NEXT_QUESTION` it prints (question 3a), then stop.
 
 **3a. Ask whether the paper should carry today's mail.** Copy the locked
-line. Weather and calendar always run; mail is opt-in. Send only this, then stop.
+line. Weather, calendar and mail are all opt-in. Send only this, then stop.
 
 Portuguese:
 
@@ -282,31 +285,33 @@ Then record the outcome:
 
 Send only the `NEXT_QUESTION` it prints (question 4a), then stop.
 
-**4a. Ask whether they want anything on top of the weather and their agenda.**
-Copy the locked line. Do not also add a "weather" news section unless they
-insist on a second, different weather beat. "Nothing" / "skip" is a valid
-install, and the line tells them they can add more any time. Send only this,
-then stop.
+**4a. Ask what belongs in their paper.** Weather and agenda are optional,
+not assumed. Mail was chosen in step 3. "Nothing" / "skip" leaves weather
+and agenda off; no news or sports is invented. Send only this, then stop.
 
 Portuguese:
 
-> 🗞️ Quer algo a mais além do tempo e da sua agenda? O placar do seu time, notícias de um assunto… ou “nada”. Dá pra pedir mais depois, é só mandar.
+> 🗞️ O que você quer no jornal? Clima, agenda, jogos de um time ou liga, notícias de algum assunto… Você escolhe e pode mudar depois.
 
 English:
 
-> 🗞️ Want anything on top of the weather and your agenda? A team's scores, news on a topic… or “nothing”. You can add more any time, just text me.
+> 🗞️ What would you like in your paper? Weather, your agenda, games from a team or league, news on a topic… You choose and can change it later.
 
 **4b. On their next message** (including "nothing" / "skip"), take each
-thing they name by what it is. A **team** ("o Flamengo", "the Lakers") is the
-sports desk: `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league>`
-with the ESPN league slug you know for it (`bra.1`, `nba`, `eng.1` …); a team you
-cannot place in a league is taken as a section instead. Anything else is a
-`section` topic via `pt-intake`'s writer (`topics.py add --kind section --depth
-quick`), in the order they say it — that order is the news desk's order. If they
-name more than three sections, take the first three and say the cap; the daily
-run researches every news section in one session and three is the paper's
-news-roster ceiling. Never invent a section or a team they did not ask for. Then,
-regardless of whether they named any:
+thing they name by what it is. First record `weather.configured=false
+calendar.configured=false` with `record_setup.py` unless this draft already
+records an explicit choice. Set only the departments they ask for to true
+using `record_setup.py ... weather.configured=true` and/or
+`calendar.configured=true`. Do not add either as a news topic.
+A **team** is `/opt/plow/skills/pt-shared/scripts/set_sports.py add "<team>" <league> --draft`;
+a **whole league** is `set_sports.py add-league "<name>" <league> --draft`.
+Confirm its ESPN slug from the browser when unclear; ask which league if the
+request is ambiguous, never silently turn a league into a news section.
+`--draft` writes the existing setup draft before config.json exists;
+finalize_setup.py carries those choices into the finished config.
+Everything else is a `section` via `topics.py add --kind section --depth quick`,
+in the owner's order. Take at most three news sections, naming the cap.
+Never invent a section, team or league. Then record the completed answer:
 
     record_setup.py /var/lib/plow/pt/config.json news_asked=true
 

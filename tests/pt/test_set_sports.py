@@ -96,3 +96,54 @@ def test_a_config_the_gate_refuses_is_not_overwritten(config):
     assert code == 0  # the script rewrites the whole block, so a corrupt one is repaired
     assert json.loads(config.read_text())["sports"]["configured"] is True
     assert before != config.read_text() and err == ""
+
+
+def test_follow_a_whole_league_and_keep_it_when_last_team_is_removed(config):
+    assert run("add-league", "NFL", "nfl") == (0, "SPORTS:NFL (nfl)", "")
+    run("add", "Chiefs", "nfl")
+    assert run("remove", "Chiefs") == (0, "SPORTS:NFL (nfl)", "")
+    assert json.loads(config.read_text())["sports"] == {
+        "configured": True, "followed": [], "leagues": [{"name": "NFL", "league": "nfl"}]}
+    assert run("remove-league", "NFL") == (0, "SPORTS:none", "")
+    assert json.loads(config.read_text())["sports"]["configured"] is False
+
+
+def test_the_same_league_slug_updates_its_label_without_duplicating(config):
+    run("add-league", "NFL", "nfl")
+    assert run("add-league", "National Football League", "nfl")[0] == 0
+    assert json.loads(config.read_text())["sports"]["leagues"] == [
+        {"name": "National Football League", "league": "nfl"}]
+
+
+def test_league_cap_does_not_consume_team_slots(config):
+    for n in range(5):
+        assert run("add-league", f"League {n}", f"league{n}")[0] == 0
+        assert run("add", f"Team {n}", "nba")[0] == 0
+    before = config.read_bytes()
+    assert run("add-league", "Extra", "extra")[0] == 1
+    assert config.read_bytes() == before
+
+
+def test_sports_chosen_during_setup_survive_config_finalization(tmp_path, monkeypatch):
+    monkeypatch.setenv("PT_HOME", str(tmp_path))
+    path = tmp_path / "config.json"
+    draft = {"local_hour": "07:00", "printer": {"configured": False},
+             "mail": {"configured": False}, "news_asked": True}
+    path.with_name(".setup-draft.json").write_text(json.dumps(draft))
+    assert run("add", "Flamengo", "bra.1", "--draft")[0] == 0
+    assert run("add-league", "NFL", "nfl", "--draft")[0] == 0
+    assert not path.exists()
+    finalize = load_module("finalize_setup", "pt-setup/scripts/finalize_setup.py")
+    assert finalize.main(["finalize_setup.py", str(path), "--owner-tz", "UTC"]) == 0
+    selected = json.loads(path.read_text())["sports"]
+    assert selected["followed"] == [{"team": "Flamengo", "league": "bra.1"}]
+    assert selected["leagues"] == [{"name": "NFL", "league": "nfl"}]
+
+
+def test_listing_malformed_league_state_reports_a_named_error(config):
+    config.write_text(json.dumps({**READY, "sports": {
+        "configured": True, "followed": [], "leagues": [{}]}}))
+    before = config.read_bytes()
+    code, out, err = run("list")
+    assert code == 1 and out == "" and "sports.leagues" in err
+    assert config.read_bytes() == before

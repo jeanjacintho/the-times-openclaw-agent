@@ -203,8 +203,9 @@ def paper_prompt(hold_until=None, lead_minutes=0, focus=None):
         f"/opt/plow/skills/pt-intake/scripts/topics.py check-paper {check}. "
         f"If it refuses, repeat its named roster, run {lock} "
         f"release --name {WORKSPACE_LOCK} --today, and stop before research. "
-        f"Then run pt-research: every standing desk "
-        f"pt-research/references/desks.md lists, in its order, then {roster}. "
+        f"Then run pt-research: only configured standing desks (weather, calendar, mail "
+        f"require their own configured=true; missing means off; sports follows chosen teams and leagues). "
+        f"Follow pt-research/references/desks.md in its order, then {roster}. "
         f"Then run pt-edition for the batch, delivering with post_to_chat.py "
         f"per pt-edition/SKILL.md step 2{hold}. "
         f"Release the lock with {lock} release --name {WORKSPACE_LOCK} --today. "
@@ -467,8 +468,8 @@ def desired_jobs(topics, delivery_hour, owner_tz,
         [delivery_hour, *extra_hours, *focused_hours], lead_minutes=lead_minutes
     )
     jobs = []
-    # The daily paper always exists once setup can register: weather and
-    # calendar run even with zero news sections.
+    # The daily paper exists once setup can register and carries only the
+    # departments and news the owner chose.
     jobs.append(daily_job(delivery_hour, _lead(delivery_hour, lead_minutes), owner_tz))
     for n, hour in enumerate(extra_hours, start=2):
         jobs.append(daily_job(hour, _lead(hour, lead_minutes), owner_tz, name=f"{DAILY_NAME}-{n}"))

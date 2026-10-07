@@ -113,7 +113,14 @@
   .desk-icon { display: inline-block; margin-right: 4px; vertical-align: -2px; }
   .wx-icon, .cal-icon, .mail-icon { display: block; }
 
-  .section--sports { break-inside: avoid; page-break-inside: avoid; }
+  .side-rail .section--sports { break-inside: avoid; page-break-inside: avoid; }
+  .sp-game, .mail-item { break-inside: avoid; page-break-inside: avoid; }
+  .section--mail { margin-bottom: 10px; }
+  .mail-item { display: table; width: 100%; padding: 4px 0; border-bottom: 1px solid var(--hairline); }
+  .mail-icon-wrap, .mail-body { display: table-cell; vertical-align: top; }
+  .mail-icon-wrap { width: 22px; color: var(--ink-soft); }
+  .mail-sender { font: 700 8px/1.3 Arial, sans-serif; margin-right: 6px; }
+  .mail-subject { font: 8px/1.3 Arial, sans-serif; }
   .section--sports h2 {
     margin: 0; padding: 5px 6px; background: var(--ink); color: var(--paper);
     font: 700 8px Arial, sans-serif; letter-spacing: 1.2px;
