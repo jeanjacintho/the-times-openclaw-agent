@@ -217,14 +217,18 @@ Read `pt/config.json`. If `sports.configured` is not exactly `true`, skip
 this desk entirely — no notes file, no edition block. When it is true,
 `sports.followed` is a list of `{ "team", "league" }` the owner set with
 `set_sports.py` (e.g. `{"team": "Flamengo", "league": "bra.1"}` or
-`{"team": "Lakers", "league": "nba"}`) — research only those teams, never
-a generic league digest nobody asked for.
+`{"team": "Lakers", "league": "nba"}`). `sports.leagues` is an optional list
+of `{ "name", "league" }` (e.g. `{"name": "NFL", "league": "nfl"}`).
+Research the games of those teams and every game in the leagues explicitly
+followed. An absent `leagues` list means no whole league. Never add a league
+or a team the owner did not choose.
 
-When weather is off, open the shared browser session scoped to ESPN before
-the scoreboard lookup; keep it for subsequent news research.
+When weather is off and no session exists yet, open one Latch browser
+session scoped to ESPN's site and `site.api.espn.com` before the scoreboard
+lookup; keep it for the subsequent news research.
 
 **ESPN's public scoreboard JSON, no key needed, one Latch browser
-navigation per league that has a followed team:**
+navigation per distinct league followed directly or containing a followed team:**
 
     https://site.api.espn.com/apis/site/v2/sports/<sport>/<league>/scoreboard
 
@@ -238,10 +242,12 @@ not `curl` it, do not `plow_run_command` it, do not use a container web
 tool (`web_fetch`). It needs no Latch Google connector and no login, unlike
 mail — but it still has to be the Mac's browser.
 
-From the response, find each followed team's own game (by team name/abbr
-match) and keep only: home team, away team, status (`scheduled` if it
+From the response, keep every game when the league is followed directly;
+otherwise keep only followed teams' games (by team name/abbr match). Fetch
+a shared league once and deduplicate by ESPN event id, so a team and its
+league never duplicate a game. Keep only: home team, away team, status (`scheduled` if it
 hasn't started, `live` if it's in progress, `final` if it's over),
-score (once `live`/`final`), and one short note — the kickoff time for
+score (once `live`/`final`), and one short note — the source's day and kickoff time for
 `scheduled`, the clock/period for `live` (e.g. "62'", "Q3 4:12"), nothing
 needed for `final`. That's the whole shape pt-edition's `games` field
 takes (see its SKILL.md) — no standings, no full schedule, no play-by-play.
@@ -255,8 +261,8 @@ notes (home/away/score/status/note), never pre-joined into one sentence
 like "Flamengo 2–1 Palmeiras" — that's what lets pt-edition bold the
 score and draw the status label instead of guessing how to parse it back
 apart. A team whose league fetch fails (deny, timeout, unknown slug) is
-logged in `could_not_source` for that team specifically; one team's
-failure doesn't drop the others. An empty followed list, or every fetch
+logged in `could_not_source` for that team or league specifically; one
+failure doesn't drop the others. Empty team and league lists, or every fetch
 failing, is a quiet sports column that day (print that honestly, same as
 an empty mailbox), not a reason to fabricate a game.
 

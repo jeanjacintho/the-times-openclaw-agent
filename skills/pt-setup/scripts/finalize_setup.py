@@ -66,6 +66,8 @@ def build(draft, owner_tz):
     }
     for desk in ("weather", "calendar"):
         config[desk] = {"configured": (draft.get(desk) or {}).get("configured", False)}
+    if "sports" in draft:
+        config["sports"] = draft["sports"]
     return config
 
 

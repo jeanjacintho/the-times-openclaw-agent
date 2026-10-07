@@ -13,15 +13,15 @@ or strategic recommendations.
 
 The product is a **compact Letter paper**. The first thing on the page is
 **your agenda for the day**, if selected, then the news you asked for: the longest story
-leads and the other two sit side by side, with the scores of the teams you
-follow in a rail beside them. Selected weather is in the masthead. A dense edition
+leads and the other two sit side by side, with games from the teams or leagues you
+follow beside them. Large league scoreboards can continue on more sheets. Selected weather is in the masthead. A dense edition
 may continue onto a second sheet. It goes to a printer on your Mac when one is
 there, and the same edition lands as a PDF in chat. Mail, if you turn it on,
 stays in the chat edition and never takes printed space.
 
 You do not fill a profile. Setup asks when the paper should arrive, whether
 you want a printer and emails, and what else belongs in it: weather, your
-agenda, teams or news topics. Weather and agenda stay off unless you choose
+agenda, teams, leagues or news topics. Weather and agenda stay off unless you choose
 them. Add or remove any department later by texting "add weather", "remove
 my agenda" or "include my emails". It learns your timezone from the Mac.
 
@@ -38,8 +38,9 @@ logins, no downloads.
 ## What goes in the paper
 
 - **Optional departments.** Weather and agenda are off until you choose them.
-  Mail is opt-in and chat-only. Sports scores appear for the teams you
-  follow (up to five). Each paper starts an hour ahead (`delivery.lead_minutes`,
+  Mail is opt-in and chat-only. Sports follows up to five teams and five
+  whole leagues, including NFL, NBA and Brasileirão. A team and its league
+  share one scoreboard lookup and each game appears once. Each paper starts an hour ahead (`delivery.lead_minutes`,
   never before midnight of its delivery day) and the PDF waits for the delivery
   hour before posting.
 - **Sections** you named ("tech", "the dollar", a beat of your own),
