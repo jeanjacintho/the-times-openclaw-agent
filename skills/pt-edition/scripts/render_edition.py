@@ -922,7 +922,10 @@ def render_html(edition, name, template_text, language=""):
     # League scoreboards can be much longer than a team's single game. Keep
     # large scoreboards out of a table cell so they paginate without clipping.
     long_sports = sum(len(s.get("games") or []) for s in sports) > 8
-    if main_html and sports_html and not long_sports:
+    if long_sports:
+        body_html = (f'<div class="page-body page-body--full"><main class="news-column">'
+                     f'{main_html}</main></div>' if main_html else "") + sports_html
+    elif main_html and sports_html:
         body_html = (f'<div class="page-body"><main class="news-column">{main_html}</main>'
                      f'<aside class="side-rail">{sports_html}</aside></div>')
     elif main_html or sports_html:
@@ -930,10 +933,6 @@ def render_html(edition, name, template_text, language=""):
                      f'{main_html or sports_html}</main></div>')
     else:
         body_html = ""
-
-    if long_sports:
-        body_html = (f'<div class="page-body page-body--full"><main class="news-column">'
-                     f'{main_html}</main></div>' if main_html else "") + sports_html
 
     location = html.escape((edition.get("location") or "").strip() or "One copy")
     slots = {
