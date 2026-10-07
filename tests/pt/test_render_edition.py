@@ -716,7 +716,7 @@ class TestMain:
         render.main([str(path), "--chat", str(out)])
         assert "Weather in Sao Paulo" in out.read_text()
 
-    def test_writes_the_chat_only_mail_companion(self, tmp_path):
+    def test_mail_is_in_the_paper_and_clears_a_legacy_companion(self, tmp_path):
         path = write(tmp_path, edition(sections=[
             {"kind": "section", "topic_id": "t_8c1d", "title": "Lead", "desk": "news",
              "body": "Printed.", "sources": []},
@@ -728,10 +728,13 @@ class TestMain:
         out = tmp_path / "edition.companion.txt"
         config = tmp_path / "config.json"
         config.write_text(json.dumps({"mail": {"configured": True}, "sports": {"configured": True}}))
-        render.main([str(path), "--config", str(config), "--companion", str(out)])
-        assert "Inbox summary." in out.read_text()
-        assert "Final score." not in out.read_text()  # sports prints on the page
-        assert "Printed." not in out.read_text()
+        page = tmp_path / "edition.html"
+        out.write_text("old mail companion")
+        render.main([str(path), "--config", str(config), "--html", str(page), "--companion", str(out)])
+        assert "Inbox summary." in page.read_text()
+        assert "Final score." in page.read_text()
+        assert "Printed." in re.sub(r"<[^>]+>", "", page.read_text())
+        assert not out.exists()
 
     def test_no_chat_only_desks_remove_a_stale_companion(self, tmp_path):
         path = write(tmp_path, edition(sections=[

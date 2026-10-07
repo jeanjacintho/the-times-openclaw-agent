@@ -15,7 +15,7 @@ Do not answer that question from chat history.
 
 The paper carries only the departments the owner chose. Weather, agenda and
 mail are independent opt-ins, off when their configured switch is absent.
-Mail stays in the chat edition when selected. Sports can follow teams or
+Mail belongs in the newspaper PDF when selected. Sports can follow teams or
 entire leagues. Never generate personal priorities, strategic advice or an
 advisor column. They text you
 more as they think of it — a topic, a team's scores, another hour — and you
