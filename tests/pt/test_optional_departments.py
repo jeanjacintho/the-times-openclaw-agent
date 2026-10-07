@@ -50,8 +50,11 @@ def test_setup_choices_survive_finalization_and_absent_choices_stay_off(tmp_path
     assert config["mail"]["configured"] is True
 
 
-@pytest.mark.parametrize("enabled", [None, "weather", "calendar", "mail", "sports"])
-def test_only_chosen_departments_reach_html_and_chat(tmp_path, enabled):
+@pytest.mark.parametrize("enabled,switches_present", [
+    (None, True), (None, False),
+    ("weather", True), ("calendar", True), ("mail", True), ("sports", True),
+])
+def test_only_chosen_departments_reach_html_and_chat(tmp_path, enabled, switches_present):
     desks = ("weather", "calendar", "mail", "sports")
     edition = {"date": "2026-10-07", "sections": [
         {"kind": "section", "desk": desk, "title": desk, "body": f"Content for {desk}"}
@@ -60,7 +63,8 @@ def test_only_chosen_departments_reach_html_and_chat(tmp_path, enabled):
     source = tmp_path / "edition.json"
     source.write_text(json.dumps(edition))
     config = tmp_path / "config.json"
-    config.write_text(json.dumps({desk: {"configured": desk == enabled} for desk in desks}))
+    config.write_text(json.dumps({**READY, **({desk: {"configured": desk == enabled}
+                                             for desk in desks} if switches_present else {})}))
     page, chat = tmp_path / "page.html", tmp_path / "chat.txt"
     assert render.main([str(source), "--config", str(config), "--html", str(page), "--chat", str(chat)]) == 0
     assert "Chosen news" in re.sub(r"<[^>]+>", "", page.read_text())
@@ -69,18 +73,6 @@ def test_only_chosen_departments_reach_html_and_chat(tmp_path, enabled):
         # Weather without a forecast is a named miss in the masthead, not body prose.
         if desk != "weather":
             assert (f"Content for {desk}" in page.read_text()) == (desk == enabled)
-
-
-def test_old_config_does_not_implicitly_enable_weather_or_agenda(tmp_path):
-    config = tmp_path / "config.json"
-    config.write_text(json.dumps(READY))
-    source = tmp_path / "edition.json"
-    source.write_text(json.dumps({"date": "2026-10-07", "sections": [
-        {"kind": "section", "desk": "calendar", "title": "Private agenda", "body": "Private appointment"},
-        {"kind": "section", "desk": "weather", "title": "Weather", "body": "Private city"}]}))
-    page = tmp_path / "out.html"
-    assert render.main([str(source), "--config", str(config), "--html", str(page)]) == 0
-    assert "Private" not in page.read_text()
 
 
 def test_disabled_stale_scratch_cannot_block_a_selected_department(tmp_path):
