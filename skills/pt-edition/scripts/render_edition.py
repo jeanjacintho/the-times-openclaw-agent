@@ -969,8 +969,6 @@ def main(argv=None):
     parser.add_argument("--chat", default=None, help="write the chat text here")
     parser.add_argument("--html", default=None, help="write the printable HTML here")
     parser.add_argument("--pdf", default=None, help="write a PDF here (needs weasyprint)")
-    parser.add_argument("--companion", default=None,
-                        help="remove a legacy mail companion; selected mail is now in the PDF")
     parser.add_argument("--config", default=CONFIG_DEFAULT,
                         help="pt/config.json; its owner.language picks the page's labels")
     args = parser.parse_args(argv)
@@ -1012,9 +1010,6 @@ def main(argv=None):
         pathlib.Path(args.chat).write_text(chat_text)
     else:
         sys.stdout.write(chat_text)
-
-    if args.companion:
-        pathlib.Path(args.companion).unlink(missing_ok=True)
 
     if args.html or args.pdf:
         try:
