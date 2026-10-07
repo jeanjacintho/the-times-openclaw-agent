@@ -11,19 +11,18 @@ or strategic recommendations.
 
 ## What it is
 
-The product is a **compact Letter paper**. The first thing on the page is
-**your agenda for the day**, if selected, then the news you asked for: the longest story
-leads and the other two sit side by side, with games from the teams or leagues you
-follow beside them. Large league scoreboards can continue on more sheets. Selected weather is in the masthead. A dense edition
-may continue onto a second sheet. It goes to a printer on your Mac when one is
-there, and the same edition lands as a PDF in chat. Mail, if you turn it on,
-stays in the chat edition and never takes printed space.
+The product is a **compact Letter paper** with the sections you choose.
+Weather, your agenda and emails are optional. Selected emails show sender and
+subject in the same PDF and printed paper. News fills the main page; games
+from teams or entire leagues fill the sports column. A longer edition can
+continue onto more sheets. It goes to a printer on your Mac when configured,
+and the same edition lands as a PDF in chat.
 
 You do not fill a profile. Setup asks when the paper should arrive, whether
 you want a printer and emails, and what else belongs in it: weather, your
-agenda, teams, leagues or news topics. Weather and agenda stay off unless you choose
-them. Add or remove any department later by texting "add weather", "remove
-my agenda" or "include my emails". It learns your timezone from the Mac.
+agenda, teams, leagues or news topics. Weather and agenda stay off unless you
+choose them. Add or remove any of them later by texting the paper: "add
+weather", "remove my agenda", "follow NFL", "include my emails".
 
 Research runs on **your** browser, through [Latch](https://howto.plow.co/latch).
 If a page cannot be read, the paper says so — it does not invent the paragraph.
@@ -37,10 +36,10 @@ logins, no downloads.
 
 ## What goes in the paper
 
-- **Optional departments.** Weather and agenda are off until you choose them.
-  Mail is opt-in and chat-only. Sports follows up to five teams and five
-  whole leagues, including NFL, NBA and Brasileirão. A team and its league
-  share one scoreboard lookup and each game appears once. Each paper starts an hour ahead (`delivery.lead_minutes`,
+- **Optional departments.** Weather, agenda and emails appear only when you
+  choose them. Sports follows up to five teams and five whole leagues,
+  including football, NFL and NBA. Each game appears once, even when you
+  follow both its team and its league. Each paper starts an hour ahead (`delivery.lead_minutes`,
   never before midnight of its delivery day) and the PDF waits for the delivery
   hour before posting.
 - **Sections** you named ("tech", "the dollar", a beat of your own),

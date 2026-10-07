@@ -1,6 +1,6 @@
 ---
 name: pt-edition
-description: Compile one or more topics' research notes into edition.json, render the Letter PDF plus any chat-only desk companion, and post them via post_to_chat.py, which finalizes carried topics and prints when configured. Runs in the cron-fired session after pt-research.
+description: Compile one or more topics' research notes into edition.json, render the Letter PDF with every selected department, and post them via post_to_chat.py, which finalizes carried topics and prints when configured. Runs in the cron-fired session after pt-research.
 ---
 
 # pt-edition — notes become the edition
@@ -99,7 +99,7 @@ HTML.** Hand-write `edition.json` under the run directory:
   leads the page at full width, news occupies the main well, and sports
   scores sit in a rail beside it. The longest news body leads at full width;
   article order breaks ties and otherwise preserves the pair below it. Mail
-  stays in the chat edition and takes no print space. Every desk keeps the same title / headline /
+  appears in the PDF alongside the selected news and sports. Every desk keeps the same title / headline /
   body / sources shape.
 - **`forecast` is optional, weather-only, and drawn — not written.** Exactly
   one day object: `day` (short label, e.g. "Tue"), `date` (e.g.
@@ -169,8 +169,8 @@ HTML.** Hand-write `edition.json` under the run directory:
 - **Include no more than three news articles, and never hand-split copy.**
   Pagination is the renderer's job: it keeps every included word, news
   that does not fit one Letter sheet continues on page 2+ (WeasyPrint,
-  `column-fill: auto`). Large league scoreboards paginate too; individual
-  game rows stay whole. It never truncates or silently drops a fourth
+  `column-fill: auto`). A large league scoreboard and the letters column
+  paginate too; their individual rows stay whole. It never truncates or silently drops a fourth
   article.
 - **A desk's notes file must be dated for today's edition.** A desk that
   fails to gather leaves the previous day's `run/desk-*/notes.json` /
@@ -208,7 +208,7 @@ this skill delivers it from that session like any other paper (no
    complete command, printer or not; **copy it and change only the
    paths.** Do not add flags that are not here:
 
-       /opt/plow/skills/pt-edition/scripts/render_edition.py <edition.json> --pdf run/<id>/edition.pdf --companion run/<id>/edition.companion.txt
+       /opt/plow/skills/pt-edition/scripts/render_edition.py <edition.json> --pdf run/<id>/edition.pdf
 
    The printed page is this same PDF. `--chat PATH` is optional and takes
    a path when used; the chat transcript is not posted, so you normally
@@ -231,15 +231,11 @@ this skill delivers it from that session like any other paper (no
      is the PDF genuinely impossible — that costs the PDF file alone; take
      the text fallback in step 2 and do not write the edition by hand.
 
-2. **Send the PDF yourself, by running `post_to_chat.py --pdf`, instead of
-   returning the transcript as your final response.** If the renderer wrote
-   `edition.companion.txt`, it contains only the mail desk, omitted
-   from print; include it with `--text-file`. This is not the full chat dump:
+2. **Send the PDF yourself with `post_to_chat.py --pdf`.** All chosen
+   departments, including mail, are in the PDF. Do not send a separate mail
+   companion or a duplicate chat recap:
 
-       /opt/plow/skills/pt-shared/scripts/post_to_chat.py --pdf run/<id>/edition.pdf --text-file run/<id>/edition.companion.txt --filename The-Times-<date>.pdf
-
-   When no companion file exists, omit only `--text-file`; the PDF posts with
-   an empty body, the same envelope used for attachment-only sends.
+       /opt/plow/skills/pt-shared/scripts/post_to_chat.py --pdf run/<id>/edition.pdf --filename The-Times-<date>.pdf
 
    A **scheduled** paper's cron prompt adds `--hold-until HH:MM` (that job's
    delivery hour). Honor it: with the hour still ahead the script does not

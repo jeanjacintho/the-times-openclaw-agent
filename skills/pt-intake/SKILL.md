@@ -30,7 +30,7 @@ For "add weather", "remove my agenda" or "include my emails", use
 `/opt/plow/skills/pt-shared/scripts/set_desks.py <weather|calendar|mail> <on|off>`.
 A missing switch means off. Never make these choices into news topics or
 restart setup. Read the result and confirm the chosen department. Removing
-mail stops both mailbox reads and inclusion in the chat edition.
+mail stops both mailbox reads and inclusion in the PDF.
 
 For "follow NFL", "all NBA games" or "Brasileirão scores", use
 `/opt/plow/skills/pt-shared/scripts/set_sports.py add-league "<name>" <league>`;

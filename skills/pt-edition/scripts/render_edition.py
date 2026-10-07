@@ -446,17 +446,6 @@ def render_chat(edition, name, language=""):
     return "\n".join(lines) + "\n"
 
 
-def render_companion(edition):
-    """The mail desk, omitted from the print layout: the owner's inbox stays in chat."""
-    sections = [
-        section for _index, section in ordered_sections(edition["sections"])
-        if desk_of(section) == "mail"
-    ]
-    if not sections:
-        return ""
-    return "\n\n".join(chat_section(section) for section in sections) + "\n"
-
-
 # Forecast drawings: Atlas Icons weather glyphs (MIT), vendored beside
 # this skill so the "no external assets" rule in template.html holds.
 # FORECAST_ICONS is the only allowed set of filenames.
@@ -934,6 +923,8 @@ def render_html(edition, name, template_text, language=""):
     else:
         body_html = ""
 
+    body_html += mail_html
+
     location = html.escape((edition.get("location") or "").strip() or "One copy")
     slots = {
         "{{AGENDA}}": agenda_html,
@@ -978,8 +969,6 @@ def main(argv=None):
     parser.add_argument("--chat", default=None, help="write the chat text here")
     parser.add_argument("--html", default=None, help="write the printable HTML here")
     parser.add_argument("--pdf", default=None, help="write a PDF here (needs weasyprint)")
-    parser.add_argument("--companion", default=None,
-                        help="write the chat-only mail desk here when present")
     parser.add_argument("--config", default=CONFIG_DEFAULT,
                         help="pt/config.json; its owner.language picks the page's labels")
     args = parser.parse_args(argv)
@@ -1021,13 +1010,6 @@ def main(argv=None):
         pathlib.Path(args.chat).write_text(chat_text)
     else:
         sys.stdout.write(chat_text)
-
-    if args.companion:
-        companion_path = pathlib.Path(args.companion)
-        companion_path.unlink(missing_ok=True)
-        companion = render_companion(edition)
-        if companion:
-            companion_path.write_text(companion)
 
     if args.html or args.pdf:
         try:

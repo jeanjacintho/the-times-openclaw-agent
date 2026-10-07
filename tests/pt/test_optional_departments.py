@@ -71,7 +71,7 @@ def test_only_chosen_departments_reach_html_and_chat(tmp_path, enabled, switches
     for desk in desks:
         assert (f"Content for {desk}" in chat.read_text()) == (desk == enabled)
         # Weather without a forecast is a named miss in the masthead, not body prose.
-        if desk not in ("weather", "mail"):
+        if desk != "weather":
             assert (f"Content for {desk}" in page.read_text()) == (desk == enabled)
 
 
