@@ -192,15 +192,8 @@ def gate(config):
     if language is not None and not _nonblank(language):
         failures.append("owner.language is blank")
 
-    # 8. mail.configured, when mail is present, is a boolean. Absent mail
-    #    is an unconfigured letters desk -- the daily paper skips it.
-    mail = _index(config, "mail")
-    if mail is not None:
-        mail_configured = _index(mail, "configured")
-        if not isinstance(mail_configured, bool):
-            failures.append("mail.configured is not a boolean")
-
-    for desk in ("weather", "calendar"):
+    # 8. Optional departments require a boolean switch; absent means off.
+    for desk in ("mail", "weather", "calendar"):
         block = _index(config, desk)
         if block is not None and not isinstance(_index(block, "configured"), bool):
             failures.append(f"{desk}.configured is not a boolean")
