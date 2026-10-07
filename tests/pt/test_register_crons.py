@@ -906,7 +906,8 @@ class TestRunPromptsDelegateDelivery:
         for prompt in (crons.paper_prompt("07:00"), crons.paper_prompt("12:00", focus="12:00"), crons.paper_prompt()):
             assert "prepare_daily_run.py " in prompt and "--preserve" not in prompt
             assert "tournament" not in prompt and "priority desk" not in prompt
-            assert "every standing desk" in prompt
+            assert "only configured standing desks" in prompt
+            assert "missing means off" in prompt
 
     @pytest.mark.parametrize("prompt", [
         crons.paper_prompt(),

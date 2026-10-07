@@ -149,8 +149,10 @@ HTML.** Hand-write `edition.json` under the run directory:
   Product sync.\n\n11am — Investor call." reads as two clean bullets,
   "9am — Product sync. 11am — Investor call." reads as a dense wall of
   text. One event, one sender, one line each.
-- The daily paper always includes weather and calendar from
-  `run/desk-*/notes.json`. If calendar notes list `could_not_source` and
+- The daily paper includes weather and calendar from
+  `run/desk-*/notes.json` only when each department has its own
+  `configured: true` in `pt/config.json`. Missing means off. Never read
+  a disabled department or carry its old notes. If calendar notes list `could_not_source` and
   no events, the headline says the paper could not read the agenda (never
   a free day — desks.md §2). Mail only when
   `pt/config.json` has
@@ -175,12 +177,10 @@ HTML.** Hand-write `edition.json` under the run directory:
   such file's `date` is missing or not the edition's `date`; re-run that
   desk, or delete its stale files. A news-only edition (a one-topic
   subscription) renders no standing desk, so leftover desk files are not
-  checked and need no action. Weather and calendar are mandatory: after
-  deleting, compile an honest failed-gather section from the current reason,
-  never drop them. Only mail
-  and sports may be dropped as a logged miss. While the edition still carries a standing desk, the check reads
-  all the files, so dropping one desk's section without deleting its files
-  still refuses.
+  checked and need no action. For a selected desk that failed, compile an
+  honest failed-gather section with the current reason. Disabled desks are
+  omitted and their old scratch is ignored; the gate checks only desks carried
+  in this edition.
 - **`location` is this run's city** from the Latch location step, a string,
   optional. It is the dateline, not a stored profile: if location failed,
   omit the field.

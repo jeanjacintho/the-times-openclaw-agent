@@ -66,6 +66,8 @@ The checks:
      "league"}, ...]}`: at most MAX_FOLLOWED_TEAMS entries, each with a
      non-blank team and league (the ESPN league slug the sports desk reads).
      Absent means the sports desk is off. Only set_sports.py writes it.
+  11. weather.configured and calendar.configured, when present, are booleans.
+     Each absent department is off; both require an explicit opt-in.
 
 The owner's name, location, or any other personal fact is deliberately not
 among the checks, and not in the schema: location is fetched each run via
@@ -195,6 +197,11 @@ def gate(config):
         mail_configured = _index(mail, "configured")
         if not isinstance(mail_configured, bool):
             failures.append("mail.configured is not a boolean")
+
+    for desk in ("weather", "calendar"):
+        block = _index(config, desk)
+        if block is not None and not isinstance(_index(block, "configured"), bool):
+            failures.append(f"{desk}.configured is not a boolean")
 
     # 10. sports, when present, is the sports desk's switch and followed teams.
     sports = _index(config, "sports")

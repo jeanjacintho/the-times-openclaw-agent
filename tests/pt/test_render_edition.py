@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 import types
 
@@ -725,7 +726,9 @@ class TestMain:
              "body": "Final score.", "sources": []},
         ]))
         out = tmp_path / "edition.companion.txt"
-        render.main([str(path), "--companion", str(out)])
+        config = tmp_path / "config.json"
+        config.write_text(json.dumps({"mail": {"configured": True}, "sports": {"configured": True}}))
+        render.main([str(path), "--config", str(config), "--companion", str(out)])
         assert "Inbox summary." in out.read_text()
         assert "Final score." not in out.read_text()  # sports prints on the page
         assert "Printed." not in out.read_text()
@@ -772,9 +775,12 @@ class TestMain:
 
     @pytest.mark.parametrize("fields", [{"date": "2000-01-01"}, {}])
     def test_refuses_a_desk_file_dated_for_another_day_or_undated(self, tmp_path, fields):
-        path = _paper_with_desk_file(tmp_path, edition_with_weather(), fields)
+        data = edition(sections=[{"kind": "section", "desk": "calendar", "title": "Agenda", "body": "Today"}])
+        path = _paper_with_desk_file(tmp_path, data, fields)
+        config = tmp_path / "config.json"
+        config.write_text(json.dumps({"calendar": {"configured": True}}))
         with pytest.raises(SystemExit) as exc:
-            render.main([str(path), "--config", str(tmp_path / "none.json")])
+            render.main([str(path), "--config", str(config)])
         assert "stale desk notes" in str(exc.value)
 
 

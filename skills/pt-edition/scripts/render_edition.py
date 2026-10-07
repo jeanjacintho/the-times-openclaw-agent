@@ -48,8 +48,8 @@ from owner_phrases import phrase  # noqa: E402
 from pt_paths import config_file  # noqa: E402
 DEFAULT_MASTHEAD = "THE TIMES"
 KINDS = ("section", "assignment")
-# Standing newspaper desks. weather and calendar always run; mail only when
-# pt/config.json says mail.configured. news is every owner-chosen section
+# Optional newspaper desks, each gated by its own configured switch.
+# Missing switches mean off. news is every owner-chosen section
 # and assignment -- same story shape, different page slot.
 DESKS = ("news", "weather", "calendar", "mail", "sports")
 DESK_ORDER = {"weather": 0, "calendar": 1, "mail": 2, "sports": 3, "news": 4}
@@ -351,7 +351,10 @@ def stale_desk_files(edition, run_root):
     if all(desk_of(s) == "news" for s in edition["sections"]):
         return []
     stale = []
+    carried = {f"desk-{desk_of(s)}" for s in edition["sections"]}
     for path in sorted(pathlib.Path(run_root).glob("desk-*/*.json")):
+        if path.parent.name not in carried:
+            continue
         data = _load_json_file(path)
         if data is None:
             continue
@@ -983,10 +986,23 @@ def main(argv=None):
     if isinstance(edition, dict):
         fill_news_desk(edition)
     config = _load_json_file(args.config)
+    if config is None and pathlib.Path(args.config).exists():
+        sys.exit("error: newspaper config is not a readable JSON object")
+    config = config or {}
+    for desk in DESKS:
+        block = config.get(desk)
+        if block is not None and (not isinstance(block, dict) or
+                                  not isinstance(block.get("configured"), bool)):
+            sys.exit(f"error: {desk}.configured is not a boolean")
 
     failures = validate(edition)
     if failures:
         sys.exit(f"error: invalid edition.json: {failures}")
+    # Explicit opt-in, including older configs with no weather/calendar switches.
+    edition["sections"] = [s for s in edition["sections"]
+                           if desk_of(s) == "news" or
+                           (config.get(desk_of(s)) or {}).get("configured") is True]
+
     stale = stale_desk_files(edition, pathlib.Path(args.edition).resolve().parent.parent)
     if stale:
         sys.exit(f"error: stale desk notes for edition {edition['date']}: {stale}; "

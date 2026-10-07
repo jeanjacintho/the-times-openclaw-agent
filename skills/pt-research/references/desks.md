@@ -1,7 +1,9 @@
 # Standing desks — how the daily paper fills weather, calendar, mail and sports
 
 These are not topics. They are fixed newspaper departments, run in this
-file's order. The daily run always fills weather and calendar.
+file's order. Run weather only when `weather.configured` is exactly true,
+and calendar only when `calendar.configured` is exactly true. Missing switches
+mean off; never gather a disabled department or reuse its old notes.
 Mail joins only when `pt/config.json` has `"mail": { "configured": true }`; sports
 joins only when it has `"sports": { "configured": true }`. Ordinary desk notes go under
 `/var/lib/plow/pt/run/desk-<name>/notes.json` (same shape as a topic
@@ -16,7 +18,13 @@ Every Latch call is the same two tools the print path uses:
 `{"status":"pending","handle":…}`, `plow_get_result` until `ready`. A
 401/412/deny is one blocked source: log it, do not retry.
 
-## 1. Location, then weather — every daily run
+## 1. Location, then weather — only when configured
+
+Read `pt/config.json` first. If `weather.configured` is not exactly true,
+skip this department completely, including IP location and weather browsing.
+Do not invent a city for the dateline. When sports or news need a browser,
+open the same shared session with only the origins they need.
+
 
 Do not ask the owner for a city and do not write one into config. Read it
 from the Mac this run, through Latch's browser — not `plow_run_command`,
@@ -74,7 +82,11 @@ answer.
    numbers could not be sourced, omit `forecast` and name the miss in
    `could_not_source`.
 
-## 2. Calendar — every daily run
+## 2. Calendar — only when configured
+
+If `calendar.configured` is not exactly true, skip this department entirely:
+no Google Calendar call, no Calendar.app call, no notes or events file.
+
 
 Read-only. Today's events, then the next few days. **Google Calendar via
 Latch first, Calendar.app only when Google failed or had nothing today.**
@@ -207,6 +219,9 @@ this desk entirely — no notes file, no edition block. When it is true,
 `set_sports.py` (e.g. `{"team": "Flamengo", "league": "bra.1"}` or
 `{"team": "Lakers", "league": "nba"}`) — research only those teams, never
 a generic league digest nobody asked for.
+
+When weather is off, open the shared browser session scoped to ESPN before
+the scoreboard lookup; keep it for subsequent news research.
 
 **ESPN's public scoreboard JSON, no key needed, one Latch browser
 navigation per league that has a followed team:**

@@ -64,6 +64,8 @@ def build(draft, owner_tz):
         },
         "mail": {"configured": bool((draft.get("mail") or {}).get("configured"))},
     }
+    for desk in ("weather", "calendar"):
+        config[desk] = {"configured": (draft.get(desk) or {}).get("configured", False)}
     return config
 
 
