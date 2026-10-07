@@ -109,6 +109,9 @@ lists it beside its siblings. Paths come from `pt_paths.py`, never a literal.
   archives prior dated and desk scratch beside `run/` and prints `READY`.
   It preserves topic workspaces, the live lock, and setup evidence. The wiki is delivered
   history; archived scratch is never today's completed work.
+- `scripts/set_desks.py <weather|calendar|mail> <on|off>` — atomic,
+  gate-checked choice of newspaper departments; missing switches mean off.
+  Prints `DESK:<department>:<on|off>`. Setup uses `record_setup.py`.
 - `scripts/set_sports.py add <team> <league> | remove <team> | list` — the ONLY way the
   teams the sports desk follows change; gate-checked, atomic, at most five teams, prints
   `SPORTS:<team> (<league>), …` or `SPORTS:none`. Adding the first team turns
